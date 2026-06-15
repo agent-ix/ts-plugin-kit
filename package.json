@@ -1,0 +1,70 @@
+{
+  "name": "@agent-ix/ts-plugin-kit",
+  "description": "Framework-agnostic plugin/marketplace toolkit: typed git/npm sources, ref/sha pinning, install registry, and default-set reconciliation.",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist/",
+    "LICENSE",
+    "README.md"
+  ],
+  "main": "dist/index.js",
+  "packageManager": "pnpm@10.33.4",
+  "scripts": {
+    "help": "node scripts/help.js",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:json": "vitest run --reporter=json --outputFile=report.json || true",
+    "lint": "eslint \"src/**/*.{ts,tsx,js,jsx}\" \"tests/**/*.{ts,tsx,js,jsx}\" && pnpm run format:check",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "build": "vite build",
+    "clean": "rm -rf node_modules dist coverage .pnpm-store",
+    "install:frozen": "pnpm install --frozen-lockfile",
+    "update-lock": "pnpm install --lockfile-only",
+    "version": "node scripts/build-tools.js version",
+    "info": "node scripts/build-tools.js info",
+    "docker:build": "docker build -t ghcr.io/agent-ix/ts-plugin-kit .",
+    "publish:dry-run": "pnpm publish --dry-run",
+    "prepublishOnly": "pnpm run build",
+    "tags": "npm dist-tag ls @agent-ix/ts-plugin-kit --registry http://npm.ix/ || echo '(package not found or registry unavailable)'",
+    "pkg:add": "pnpm add",
+    "pkg:add-dev": "pnpm add -D",
+    "pkg:update": "pnpm update",
+    "pkg:update-latest": "pnpm update --latest",
+    "pkg:use-local": "pnpm dlx @agent-ix/js-deps use-local",
+    "pkg:use-upstream": "pnpm dlx @agent-ix/js-deps use-upstream",
+    "pkg:refresh-local": "pnpm dlx @agent-ix/js-deps refresh-local",
+    "test-results:summary": "./node_modules/.bin/jest-results summary",
+    "test-results:groups": "./node_modules/.bin/jest-results groups",
+    "test-results:detail": "./node_modules/.bin/jest-results detail",
+    "test-results:find": "./node_modules/.bin/jest-results find",
+    "test-results:failed": "./node_modules/.bin/jest-results failed",
+    "test-results:errors": "./node_modules/.bin/jest-results errors",
+    "test-results:warnings": "./node_modules/.bin/jest-results warnings"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "@typescript-eslint/eslint-plugin": "^8.31.1",
+    "@typescript-eslint/parser": "^8.31.1",
+    "@vitest/coverage-v8": "^4.1.2",
+    "add": "^2.0.6",
+    "eslint": "^9.25.1",
+    "eslint-plugin-prettier": "^5.2.6",
+    "pnpm": "^10.10.0",
+    "prettier": "^3.5.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.3",
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^4.1.2"
+  },
+  "publishConfig": {
+    "registry": "http://npm.ix/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agent-ix/ts-plugin-kit.git"
+  }
+}

@@ -11,15 +11,9 @@
     "declaration": true,
     "declarationMap": true,
     "outDir": "dist",
-    "types": ["vitest/globals"],
+    "types": ["vitest/globals", "node"],
     "rootDir": "src"
   },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "tests",
-    "dist",
-    "node_modules"
-  ]
+  "include": ["src"],
+  "exclude": ["tests", "dist", "node_modules"]
 }

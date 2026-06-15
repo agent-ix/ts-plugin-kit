@@ -1,6 +1,41 @@
 # ts-plugin-kit
 
-Framework-agnostic plugin/marketplace toolkit: typed git/npm sources, ref/sha pinning, install registry, and default-set reconciliation.
+Framework-agnostic plugin/marketplace toolkit: typed git/npm sources, ref/sha pinning, install registry, and default-set reconciliation. **Zero runtime dependencies.**
+
+It is the install mechanism shared by Agent-IX CLIs and any other host (the `ix` CLI, `ix-spec`, a future desktop app). It knows nothing about oclif or any particular plugin payload — a host supplies a `readName` callback and decides what to do with the resolved files.
+
+## Usage
+
+```ts
+import {
+  reconcile,
+  validateMarketplaceManifest,
+} from "@agent-ix/ts-plugin-kit";
+
+// host parses YAML/JSON itself, then validates the object
+const manifest = validateMarketplaceManifest(parsedYaml);
+
+const result = reconcile(manifest, {
+  mode: "lazy", // install only what's missing/repinned; zero git when settled
+  cacheRoot: "~/.cache/ix/ts-plugin-kit",
+  targetRoot: "~/.ix/filament/modules", // <name>/ materialized here
+  registryPath: "~/.ix/filament/registry.json",
+  readName: (dir) => /* derive a name from the resolved content */ "...",
+});
+// result.{installed, unchanged, updated, skipped}
+```
+
+A manifest entry's `source` is one of:
+
+| `type`        | fetches                                              |
+| ------------- | ---------------------------------------------------- |
+| `github`      | `owner/repo` at a `ref`/`sha`                        |
+| `git-subdir`  | one **sparse-checked-out** subdir of a repo at a pin |
+| `git`         | any git URL at a `ref`/`sha`                         |
+| `path`        | a local directory (dev)                              |
+| `url` / `npm` | reserved — resolution not yet implemented            |
+
+All operations are **synchronous** (git is the only side effect) and pins are recorded as resolved commit shas, so a settled lazy `reconcile` performs no git at all.
 
 Included:
 

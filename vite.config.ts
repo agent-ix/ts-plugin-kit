@@ -22,7 +22,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: "src/index.ts",
-      name: 'Tspluginkit',
+      name: "Tspluginkit",
       fileName: (format) => `index.js`,
       formats: ["es"],
     },

@@ -35,14 +35,7 @@
     "pkg:update-latest": "pnpm update --latest",
     "pkg:use-local": "pnpm dlx @agent-ix/js-deps use-local",
     "pkg:use-upstream": "pnpm dlx @agent-ix/js-deps use-upstream",
-    "pkg:refresh-local": "pnpm dlx @agent-ix/js-deps refresh-local",
-    "test-results:summary": "./node_modules/.bin/jest-results summary",
-    "test-results:groups": "./node_modules/.bin/jest-results groups",
-    "test-results:detail": "./node_modules/.bin/jest-results detail",
-    "test-results:find": "./node_modules/.bin/jest-results find",
-    "test-results:failed": "./node_modules/.bin/jest-results failed",
-    "test-results:errors": "./node_modules/.bin/jest-results errors",
-    "test-results:warnings": "./node_modules/.bin/jest-results warnings"
+    "pkg:refresh-local": "pnpm dlx @agent-ix/js-deps refresh-local"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",

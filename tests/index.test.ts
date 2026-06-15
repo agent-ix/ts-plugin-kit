@@ -165,6 +165,8 @@ test("toGitUrl expands shorthand and passes through URLs", () => {
   expect(toGitUrl("git@github.com:owner/repo.git")).toBe(
     "git@github.com:owner/repo.git",
   );
+  // FR-002-AC-5: surrounding whitespace is trimmed before classification.
+  expect(toGitUrl("  owner/repo  ")).toBe("https://github.com/owner/repo.git");
 });
 
 // ── manifest ─────────────────────────────────────────────────────────────────

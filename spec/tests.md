@@ -81,7 +81,7 @@ partial clones work offline.
 | FR-002         | AC-2: `owner/repo.git` strips trailing `.git`                     | TC-003 — `"toGitUrl expands shorthand and passes through URLs"`                                                        | ✅ Unit         |
 | FR-002         | AC-3: full `https://` URL passes through                          | TC-003 — `"toGitUrl expands shorthand and passes through URLs"`                                                        | ✅ Unit         |
 | FR-002         | AC-4: `git@…` scp-style URL passes through                        | TC-003 — `"toGitUrl expands shorthand and passes through URLs"`                                                        | ✅ Unit         |
-| FR-002         | AC-5: surrounding whitespace is trimmed                           | Inspection (`sources.ts:87` `raw.trim()`) — **no executed test** (backsync gap)                                        | ⚠️ Inspection   |
+| FR-002         | AC-5: surrounding whitespace is trimmed                           | TC-003 — `"toGitUrl expands shorthand and passes through URLs"` (padded-input assertion)                               | ✅ Unit         |
 | FR-003         | AC-1: valid manifest with name round-trips                        | TC-004 — `validateMarketplaceManifest › "accepts a valid manifest (with and without a name)"`                          | ✅ Unit         |
 | FR-003         | AC-2: missing name → `name === undefined`                         | TC-004 — `validateMarketplaceManifest › "accepts a valid manifest (with and without a name)"`                          | ✅ Unit         |
 | FR-003         | AC-3: null / non-object manifest → ManifestError                  | TC-005 — `validateMarketplaceManifest › "rejects malformed manifests and entries"`                                     | ✅ Unit         |
@@ -187,30 +187,27 @@ partial clones work offline.
 
 ## Coverage Summary
 
-- **Acceptance Criteria → Test Case coverage: 35 of 36 functional ACs (97%) map to
-  an executed Test Case.** The one exception is **FR-002-AC-5** (whitespace
-  trimming), which the code implements (`sources.ts:87`) but no test exercises — it
-  is verified by Inspection only and flagged as a backsync gap (see below). All 33
-  ACs of FR-001/003/004/005/006/007, both FR-004 constraints, and all 10
-  user-story ACs map to a real test in `tests/index.test.ts`. NFR-001…NFR-004 are
-  covered by the coverage gate, the zero-git assertion, inspection, and analysis.
-- The 21 TCs are **1:1** with the 21 tests in `tests/index.test.ts` (verified:
-  21 `test(...)` cases). All pass under `make test` at the 100% coverage gate.
-- All six test-matrix rules are satisfied for executed coverage: every AC has a TC
-  (Rule 1 — with the single FR-002-AC-5 inspection caveat); the copy/symlink
-  materialize options are both exercised (Rule 2, TC-014/TC-017); the two FR-004
-  constraints are boundary-tested (Rule 3); every documented error is triggered
-  (Rule 4); reconcile's installed/unchanged/updated/skipped outcomes are all
-  reached (Rule 5); and the edge cases above are explicit (Rule 6).
+- **Acceptance Criteria → Test Case coverage: 36 of 36 functional ACs (100%) map to
+  an executed Test Case.** All ACs of FR-001…FR-007 (incl. FR-002-AC-5 whitespace
+  trimming via the padded-input assertion in TC-003), both FR-004 constraints, and
+  all 10 user-story ACs map to a real test in `tests/index.test.ts`. NFR-001…NFR-004
+  are covered by the coverage gate, the zero-git assertion, inspection, and analysis.
+- The 21 TCs are **1:1** with the tests in `tests/index.test.ts`. All pass under
+  `make test` at the 100% coverage gate.
+- All six test-matrix rules are satisfied: every AC has a TC (Rule 1); the
+  copy/symlink materialize options are both exercised (Rule 2, TC-014/TC-017); the
+  two FR-004 constraints are boundary-tested (Rule 3); every documented error is
+  triggered (Rule 4); reconcile's installed/unchanged/updated/skipped outcomes are
+  all reached (Rule 5); and the edge cases above are explicit (Rule 6).
 
-## Status: ⚠️ Complete with one inspection-only AC (FR-002-AC-5)
+## Status: ✅ Complete — 100% AC→TC coverage
 
 ## Backsync Findings (code behavior vs. test coverage)
 
 Recorded during /spec-review. None block the spec; each is a candidate test/hardening item.
 
-1. **FR-002-AC-5 untested** — `toGitUrl` trims input but no test passes a padded
-   string; adding a padded case to TC-003 closes the gap.
+1. **FR-002-AC-5 — CLOSED** — TC-003 now passes a padded string (`"  owner/repo  "`),
+   so the trim behavior is executed, not inspection-only.
 2. **Malformed-JSON registry throws** — `readRegistry` only degrades a _shape-invalid
    but valid-JSON_ file (`{}`) to empty; a non-JSON file throws `SyntaxError`
    (`registry.ts:35`). FR-005/TC-012 scope "shape-invalid" accordingly; the

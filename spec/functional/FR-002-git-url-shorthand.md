@@ -39,12 +39,7 @@ unchanged, and an `owner/repo` shorthand expands to
 | FR-002-AC-2 | `toGitUrl("owner/repo.git")` strips the trailing `.git` and returns `https://github.com/owner/repo.git`.       | Test (TC-003) |
 | FR-002-AC-3 | `toGitUrl("https://example.com/x.git")` passes through unchanged.                                              | Test (TC-003) |
 | FR-002-AC-4 | `toGitUrl("git@github.com:owner/repo.git")` passes through unchanged.                                          | Test (TC-003) |
-| FR-002-AC-5 | Surrounding whitespace is trimmed before classification (e.g. `"  owner/repo  "` yields the GitHub https URL). | Inspection    |
-
-> **Backsync note:** `toGitUrl` calls `raw.trim()` (`sources.ts:87`), but no test
-> in `tests/index.test.ts` passes a padded input, so FR-002-AC-5 is currently
-> verified by code inspection only, not by an executed test case. Adding a padded
-> input to TC-003 would close this to `Test`.
+| FR-002-AC-5 | Surrounding whitespace is trimmed before classification (e.g. `"  owner/repo  "` yields the GitHub https URL). | Test (TC-003) |
 
 ## Dependencies
 

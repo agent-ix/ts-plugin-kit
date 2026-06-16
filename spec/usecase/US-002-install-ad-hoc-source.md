@@ -1,7 +1,7 @@
 ---
 id: US-002
 title: "Install an Ad-Hoc Source and Derive Its Name"
-artifact_type: US
+type: US
 relationships:
   - target: "ix://agent-ix/ts-plugin-kit/spec/stakeholder/StR-001"
     type: "traces_to"

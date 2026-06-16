@@ -1,7 +1,7 @@
 ---
 id: StR-001
 title: "Shared Framework-Agnostic, Zero-Dependency Install Mechanism"
-artifact_type: StR
+type: StR
 relationships:
   - target: "ix://agent-ix/ts-plugin-kit/spec/functional/FR-001"
     type: "satisfied_by"

@@ -1,7 +1,7 @@
 ---
 id: StR-002
 title: "Deterministic Plugin Pinning and Reproducible Installs"
-artifact_type: StR
+type: StR
 relationships:
   - target: "ix://agent-ix/ts-plugin-kit/spec/functional/FR-004"
     type: "satisfied_by"

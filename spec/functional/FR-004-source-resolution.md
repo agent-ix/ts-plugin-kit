@@ -1,7 +1,7 @@
 ---
 id: FR-004
 title: "Synchronous Source Resolution and Pinning"
-artifact_type: FR
+type: FR
 relationships:
   - target: "ix://agent-ix/ts-plugin-kit/spec/stakeholder/StR-002"
     type: "implements"

@@ -1,7 +1,7 @@
 ---
 id: FR-005
 title: "Install Registry: Read, Atomic Write, and Upsert"
-artifact_type: FR
+type: FR
 relationships:
   - target: "ix://agent-ix/ts-plugin-kit/spec/stakeholder/StR-002"
     type: "implements"

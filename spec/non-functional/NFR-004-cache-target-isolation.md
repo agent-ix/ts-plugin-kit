@@ -1,7 +1,7 @@
 ---
 id: NFR-004
 title: "Cache and Target Directory Isolation"
-artifact_type: NFR
+type: NFR
 quality_attribute: reliability
 relationships:
   - target: "ix://agent-ix/ts-plugin-kit/spec/functional/FR-004"

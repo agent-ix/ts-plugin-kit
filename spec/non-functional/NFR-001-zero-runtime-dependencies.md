@@ -1,7 +1,7 @@
 ---
 id: NFR-001
 title: "Zero Runtime Dependencies"
-artifact_type: NFR
+type: NFR
 quality_attribute: maintainability
 relationships:
   - target: "ix://agent-ix/ts-plugin-kit/spec/functional/FR-001"

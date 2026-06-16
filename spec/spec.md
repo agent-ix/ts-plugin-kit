@@ -1,5 +1,5 @@
 ---
-artifact_type: master-requirements
+type: master-requirements
 name: ts-plugin-kit
 org: agent-ix
 component_type: node-library

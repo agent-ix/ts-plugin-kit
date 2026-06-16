@@ -1,7 +1,7 @@
 ---
 id: NFR-002
 title: "One-Hundred-Percent Enforced Test Coverage"
-artifact_type: NFR
+type: NFR
 quality_attribute: maintainability
 relationships:
   - target: "ix://agent-ix/ts-plugin-kit/spec/functional/FR-004"

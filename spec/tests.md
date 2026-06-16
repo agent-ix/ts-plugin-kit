@@ -1,5 +1,5 @@
 ---
-artifact_type: test-matrix
+type: test-matrix
 name: ts-plugin-kit
 org: agent-ix
 ---

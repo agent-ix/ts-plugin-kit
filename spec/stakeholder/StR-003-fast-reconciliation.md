@@ -1,7 +1,7 @@
 ---
 id: StR-003
 title: "Fast Per-Invocation Reconciliation"
-artifact_type: StR
+type: StR
 relationships:
   - target: "ix://agent-ix/ts-plugin-kit/spec/functional/FR-007"
     type: "satisfied_by"

@@ -1,7 +1,7 @@
 ---
 id: US-001
 title: "Reconcile a Default Plugin Set"
-artifact_type: US
+type: US
 relationships:
   - target: "ix://agent-ix/ts-plugin-kit/spec/stakeholder/StR-003"
     type: "traces_to"

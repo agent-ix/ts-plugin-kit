@@ -1,7 +1,7 @@
 ---
 id: FR-006
 title: "Single-Entry Install and Materialization"
-artifact_type: FR
+type: FR
 relationships:
   - target: "ix://agent-ix/ts-plugin-kit/spec/stakeholder/StR-001"
     type: "implements"

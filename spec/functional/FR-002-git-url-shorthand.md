@@ -1,7 +1,7 @@
 ---
 id: FR-002
 title: "Git URL Shorthand Expansion"
-artifact_type: FR
+type: FR
 relationships:
   - target: "ix://agent-ix/ts-plugin-kit/spec/stakeholder/StR-001"
     type: "implements"

@@ -1,7 +1,7 @@
 ---
 id: FR-007
 title: "Default-Set Reconciliation (Lazy and Sync)"
-artifact_type: FR
+type: FR
 relationships:
   - target: "ix://agent-ix/ts-plugin-kit/spec/stakeholder/StR-003"
     type: "implements"

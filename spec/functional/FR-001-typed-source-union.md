@@ -1,7 +1,7 @@
 ---
 id: FR-001
 title: "Typed Source Union and Structural Validation"
-artifact_type: FR
+type: FR
 relationships:
   - target: "ix://agent-ix/ts-plugin-kit/spec/stakeholder/StR-001"
     type: "implements"

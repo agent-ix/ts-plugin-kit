@@ -1,7 +1,7 @@
 ---
 id: NFR-003
 title: "Synchronous Resolution with a Zero-Git Settled Hot Path"
-artifact_type: NFR
+type: NFR
 quality_attribute: performance_efficiency
 relationships:
   - target: "ix://agent-ix/ts-plugin-kit/spec/functional/FR-004"

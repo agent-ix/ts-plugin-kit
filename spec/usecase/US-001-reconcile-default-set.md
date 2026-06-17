@@ -46,5 +46,5 @@ registry.
 
 ## Dependencies
 
-- Traces to StR-003 (fast per-invocation reconciliation).
-- Satisfied by FR-007 (reconcile).
+- Traces to [StR-003](../stakeholder/StR-003-fast-reconciliation.md) (fast per-invocation reconciliation).
+- Satisfied by [FR-007](../functional/FR-007-reconcile.md) (reconcile).

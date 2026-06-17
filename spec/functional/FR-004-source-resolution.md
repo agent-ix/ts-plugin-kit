@@ -21,8 +21,8 @@ a source to a local directory and returns a `ResolvedSource` (`dir`, `sha?`,
 `ref?`). `git` (via the injectable `GitRunner`, default `defaultGitRunner` using
 `execFileSync`) SHALL be the only side effect. `ResolveOptions` carries a
 `cacheRoot` (sources cached under `<cacheRoot>/git/<key>`) and an optional `git`
-runner. The function SHALL validate the source via `normalizeSource` (FR-001) and
-expand git URLs via `toGitUrl` (FR-002).
+runner. The function SHALL validate the source via `normalizeSource` ([FR-001](./FR-001-typed-source-union.md)) and
+expand git URLs via `toGitUrl` ([FR-002](./FR-002-git-url-shorthand.md)).
 
 ## Behavior
 
@@ -60,7 +60,7 @@ that does not exist — throws the underlying Node subprocess error; it is **not
 wrapped in a `SourceError`. A `git-subdir` whose `path` is absent at the resolved
 ref does not fail in `resolveSource`; the returned `dir`
 (`<cacheDir>/<path>`) simply will not exist, and the failure surfaces in the
-consumer (FR-006). The library defines no dedicated `ResolveError` today (see
+consumer ([FR-006](./FR-006-single-entry-install.md)). The library defines no dedicated `ResolveError` today (see
 spec.md §14 Known Limitations).
 
 **`defaultGitRunner`.** The default runner shells out via
@@ -89,6 +89,6 @@ spec.md §14 Known Limitations).
 
 ## Dependencies
 
-- Implements StR-002 (durable sha pinning).
-- Requires FR-001 (`normalizeSource`) and FR-002 (`toGitUrl`).
-- Consumed by FR-006 (`installEntry`) and, transitively, FR-007 (`reconcile`).
+- Implements [StR-002](../stakeholder/StR-002-deterministic-pinning.md) (durable sha pinning).
+- Requires [FR-001](./FR-001-typed-source-union.md) (`normalizeSource`) and [FR-002](./FR-002-git-url-shorthand.md) (`toGitUrl`).
+- Consumed by [FR-006](./FR-006-single-entry-install.md) (`installEntry`) and, transitively, [FR-007](./FR-007-reconcile.md) (`reconcile`).

@@ -28,7 +28,7 @@ unchanged, and an `owner/repo` shorthand expands to
 - Otherwise treat the input as an `owner/repo` shorthand, strip a trailing `.git`
   if present, and return `https://github.com/<owner>/<repo>.git`.
 
-`toGitUrl` is used by FR-004 to expand the `github` variant's `repo` and the
+`toGitUrl` is used by [FR-004](./FR-004-source-resolution.md) to expand the `github` variant's `repo` and the
 `git` / `git-subdir` variant's `url` before cloning.
 
 ## Acceptance Criteria
@@ -43,5 +43,5 @@ unchanged, and an `owner/repo` shorthand expands to
 
 ## Dependencies
 
-- Implements StR-001.
-- Referenced by FR-004 (resolution expands the source URL via `toGitUrl`).
+- Implements [StR-001](../stakeholder/StR-001-shared-zero-dep-install-mechanism.md).
+- Referenced by [FR-004](./FR-004-source-resolution.md) (resolution expands the source URL via `toGitUrl`).

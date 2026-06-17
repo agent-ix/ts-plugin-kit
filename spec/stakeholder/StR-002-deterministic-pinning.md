@@ -25,7 +25,7 @@ Tags and branches move; "install the latest" is not reproducible. A host pinning
 to a tag still needs to know the concrete commit it got, both to reproduce a
 build and to decide whether anything changed since last time. A recorded sha
 turns "did this plugin change?" into a string comparison rather than a refetch,
-which is also what enables the fast settled reconcile (StR-003).
+which is also what enables the fast settled reconcile ([StR-003](./StR-003-fast-reconciliation.md)).
 
 Resolution checks out `sha ?? ref ?? HEAD` and returns `{dir, sha, ref}`; the
 install registry persists `sha` (and the requested `ref`) per installed plugin.
@@ -42,5 +42,5 @@ This need is considered satisfied when:
 
 ## Dependencies
 
-- Satisfied by FR-004 (resolution returns and records the durable sha) and FR-005
+- Satisfied by [FR-004](../functional/FR-004-source-resolution.md) (resolution returns and records the durable sha) and [FR-005](../functional/FR-005-install-registry.md)
   (the registry persists the sha and requested ref per install).

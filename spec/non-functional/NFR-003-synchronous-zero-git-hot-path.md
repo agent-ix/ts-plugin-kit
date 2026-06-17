@@ -31,9 +31,9 @@ per-CLI-invocation hot path.
 ## Verification
 
 - The reconcile test counts `GitRunner` calls; the second lazy reconcile of a
-  settled manifest asserts the count is exactly `0` (FR-007-AC-2).
+  settled manifest asserts the count is exactly `0` ([FR-007-AC-2](../functional/FR-007-reconcile.md)).
 - Inspect the public API in `src/index.ts`: every exported function is synchronous
   (no `async`, no `Promise<...>` return types).
 - `resolveSource` performs only filesystem reads/dir creation and the injected
   `git` subprocess; with an injected fake `GitRunner` it resolves with no real git
-  (FR-004-AC-7).
+  ([FR-004-AC-7](../functional/FR-004-source-resolution.md)).

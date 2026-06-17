@@ -39,4 +39,4 @@ data dir (for example, an oclif plugin data dir).
   `registryPath` — confirmed by code analysis.
 - The test harness constructs `cacheRoot`, `targetRoot`, and `registryPath` as
   separate subpaths of a fresh temp root for every case, and installs/reconciles
-  succeed without overlap (FR-006, FR-007 test cases).
+  succeed without overlap ([FR-006](../functional/FR-006-single-entry-install.md), [FR-007](../functional/FR-007-reconcile.md) test cases).

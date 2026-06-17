@@ -48,7 +48,7 @@ The library SHALL define `InstalledPlugin` (`name`, `source`, `ref?`, `sha?`,
 
 ## Dependencies
 
-- Implements StR-002 (the registry persists the durable sha and requested ref).
-- Requires FR-001 (`InstalledPlugin.source` is a typed `Source`).
-- Consumed by FR-006 (`installEntry` upserts the record) and FR-007 (`reconcile`
+- Implements [StR-002](../stakeholder/StR-002-deterministic-pinning.md) (the registry persists the durable sha and requested ref).
+- Requires [FR-001](./FR-001-typed-source-union.md) (`InstalledPlugin.source` is a typed `Source`).
+- Consumed by [FR-006](./FR-006-single-entry-install.md) (`installEntry` upserts the record) and [FR-007](./FR-007-reconcile.md) (`reconcile`
   reads the registry to decide unchanged vs install/update).

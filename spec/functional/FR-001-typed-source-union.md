@@ -20,14 +20,14 @@ Variants (from `src/sources.ts`):
 - `github` — `repo` (required), `ref?`, `sha?`
 - `git-subdir` — `url` (required), `path` (required), `ref?`, `sha?`
 - `git` — `url` (required), `ref?`, `sha?`
-- `url` — `url` (required), `ref?`, `sha?` — reserved (resolution deferred, FR-004)
+- `url` — `url` (required), `ref?`, `sha?` — reserved (resolution deferred, [FR-004](./FR-004-source-resolution.md))
 - `path` — `path` (required)
 - `npm` — `package` (required), `version?`, `registry?` — reserved (resolution
-  deferred; exists so hosts can build install specs, FR-004)
+  deferred; exists so hosts can build install specs, [FR-004](./FR-004-source-resolution.md))
 
 The library SHALL also export `SourceType` (the `type` discriminant), `SourceError`
 (structurally invalid descriptor), and `UnsupportedSourceError` (valid but
-not-yet-resolvable type — raised by FR-004, not by `normalizeSource`).
+not-yet-resolvable type — raised by [FR-004](./FR-004-source-resolution.md), not by `normalizeSource`).
 
 ## Behavior
 
@@ -45,7 +45,7 @@ not-yet-resolvable type — raised by FR-004, not by `normalizeSource`).
 
 `normalizeSource` SHALL accept every valid variant — `github`, `git`,
 `git-subdir`, `url`, `path`, and `npm` — including the two reserved types, because
-validation of a descriptor is distinct from its resolution (FR-004).
+validation of a descriptor is distinct from its resolution ([FR-004](./FR-004-source-resolution.md)).
 
 ## Acceptance Criteria
 
@@ -58,6 +58,6 @@ validation of a descriptor is distinct from its resolution (FR-004).
 
 ## Dependencies
 
-- Implements StR-001 (typed, framework-agnostic source contract).
-- Consumed by FR-003 (manifest entry validation), FR-004 (resolution), and FR-005
+- Implements [StR-001](../stakeholder/StR-001-shared-zero-dep-install-mechanism.md) (typed, framework-agnostic source contract).
+- Consumed by [FR-003](./FR-003-manifest-validation.md) (manifest entry validation), [FR-004](./FR-004-source-resolution.md) (resolution), and [FR-005](./FR-005-install-registry.md)
   (registry records the source).

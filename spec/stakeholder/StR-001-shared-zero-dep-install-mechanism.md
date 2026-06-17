@@ -50,7 +50,7 @@ This need is considered satisfied when:
 
 ## Dependencies
 
-- Satisfied by FR-001 (typed sources), FR-003 (manifest validation against a
-  host-parsed object), and FR-006 (host-supplied `readName`), which together keep
+- Satisfied by [FR-001](../functional/FR-001-typed-source-union.md) (typed sources), [FR-003](../functional/FR-003-manifest-validation.md) (manifest validation against a
+  host-parsed object), and [FR-006](../functional/FR-006-single-entry-install.md) (host-supplied `readName`), which together keep
   the library framework-agnostic and dependency-free.
-- The zero-runtime-dependency property is constrained by NFR-001.
+- The zero-runtime-dependency property is constrained by [NFR-001](../non-functional/NFR-001-zero-runtime-dependencies.md).

@@ -64,24 +64,24 @@ This specification governs:
 - **Typed `Source` union and validation** — the `github` / `git-subdir` / `git` /
   `path` source descriptors (implemented) and the reserved `npm` / `url`
   descriptors, `normalizeSource` structural validation, and the `toGitUrl`
-  `owner/repo` shorthand expansion (FR-001, FR-002).
+  `owner/repo` shorthand expansion ([FR-001](./functional/FR-001-typed-source-union.md), [FR-002](./functional/FR-002-git-url-shorthand.md)).
 - **Marketplace manifest validation** — `MarketplaceManifest` / `MarketplaceEntry`
   shapes and `validateMarketplaceManifest`, which validates a host-parsed plain
-  object (the host owns YAML/JSON parsing, keeping this library dep-free) (FR-003).
+  object (the host owns YAML/JSON parsing, keeping this library dep-free) ([FR-003](./functional/FR-003-manifest-validation.md)).
 - **Source resolution** — `resolveSource`, a synchronous, `git`-only fetcher that
   blobless-clones, sparse-checks-out subdirs, checks out a sha/ref/HEAD, returns a
   durable `{dir, sha, ref}` pin, and throws `UnsupportedSourceError` for reserved
-  types; the `GitRunner` is injectable for testing (FR-004).
+  types; the `GitRunner` is injectable for testing ([FR-004](./functional/FR-004-source-resolution.md)).
 - **Install registry** — `InstalledPlugin` / `PluginRegistry`, `readRegistry` /
   `writeRegistry` (atomic temp+rename), and `upsertPlugin` (last-write-wins by
-  name) (FR-005).
+  name) ([FR-005](./functional/FR-005-install-registry.md)).
 - **Single-entry install** — `installEntry`: resolve → materialize (`copy` default
   or `symlink`) into `<targetRoot>/<name>` → upsert the registry; the name comes
-  from `entry.name` or the host `readName` callback (FR-006).
+  from `entry.name` or the host `readName` callback ([FR-006](./functional/FR-006-single-entry-install.md)).
 - **Default-set reconciliation** — `reconcile`, with a `lazy` hot path (install
   only what is missing or repinned, **zero git when settled**) and a `sync` path
   (re-resolve all, detect drift), returning `{installed, unchanged, updated,
-skipped}`; `defaultEnabled:false` entries are skipped (FR-007).
+skipped}`; `defaultEnabled:false` entries are skipped ([FR-007](./functional/FR-007-reconcile.md)).
 
 ### 2.2 Out of Scope
 
@@ -92,9 +92,9 @@ This specification does not govern:
 - **`npm` and `url` source resolution.** The `npm` and `url` descriptors exist in
   the type so hosts can build install specs (e.g. an oclif `plugins:install`
   bridge), but their resolution is deliberately deferred — `resolveSource` throws
-  `UnsupportedSourceError` (FR-004).
+  `UnsupportedSourceError` ([FR-004](./functional/FR-004-source-resolution.md)).
 - **What a "name" means.** The library never inspects payload contents to derive a
-  module name; the host supplies a `readName(dir)` callback (FR-006).
+  module name; the host supplies a `readName(dir)` callback ([FR-006](./functional/FR-006-single-entry-install.md)).
 - **What the materialized files are for.** The library copies/symlinks bytes into
   the target dir and records the install; interpreting those bytes (oclif plugin,
   Filament module, schema bundle) is the host's concern.
@@ -181,11 +181,11 @@ cache/target directory isolation.
 
 | Artifact                   | Format      | Example       |
 | -------------------------- | ----------- | ------------- |
-| Stakeholder Requirement    | `StR-XXX`   | `StR-001`     |
-| User Story                 | `US-XXX`    | `US-001`      |
-| Functional Requirement     | `FR-XXX`    | `FR-004`      |
-| Non-Functional Requirement | `NFR-XXX`   | `NFR-001`     |
-| Acceptance Criteria        | `{FR}-AC-N` | `FR-004-AC-1` |
+| Stakeholder Requirement    | `StR-XXX`   | [StR-001](./stakeholder/StR-001-shared-zero-dep-install-mechanism.md)     |
+| User Story                 | `US-XXX`    | [US-001](./usecase/US-001-reconcile-default-set.md)      |
+| Functional Requirement     | `FR-XXX`    | [FR-004](./functional/FR-004-source-resolution.md)      |
+| Non-Functional Requirement | `NFR-XXX`   | [NFR-001](./non-functional/NFR-001-zero-runtime-dependencies.md)     |
+| Acceptance Criteria        | `{FR}-AC-N` | [FR-004-AC-1](./functional/FR-004-source-resolution.md) |
 | Test Case                  | `TC-XXX`    | `TC-021`      |
 
 Identifiers are immutable once assigned. IDs in this repo are a flat per-repo
@@ -195,22 +195,22 @@ sequence (no classifier prefix).
 
 | ID      | Title                                                        |
 | ------- | ------------------------------------------------------------ |
-| StR-001 | Shared Framework-Agnostic, Zero-Dependency Install Mechanism |
-| StR-002 | Deterministic Plugin Pinning and Reproducible Installs       |
-| StR-003 | Fast Per-Invocation Reconciliation                           |
-| US-001  | Reconcile a Default Plugin Set                               |
-| US-002  | Install an Ad-Hoc Source and Derive Its Name                 |
-| FR-001  | Typed Source Union and Structural Validation                 |
-| FR-002  | Git URL Shorthand Expansion                                  |
-| FR-003  | Marketplace Manifest Validation                              |
-| FR-004  | Synchronous Source Resolution and Pinning                    |
-| FR-005  | Install Registry: Read, Atomic Write, and Upsert             |
-| FR-006  | Single-Entry Install and Materialization                     |
-| FR-007  | Default-Set Reconciliation (Lazy and Sync)                   |
-| NFR-001 | Zero Runtime Dependencies                                    |
-| NFR-002 | One-Hundred-Percent Enforced Test Coverage                   |
-| NFR-003 | Synchronous Resolution with a Zero-Git Settled Hot Path      |
-| NFR-004 | Cache and Target Directory Isolation                         |
+| [StR-001](./stakeholder/StR-001-shared-zero-dep-install-mechanism.md) | Shared Framework-Agnostic, Zero-Dependency Install Mechanism |
+| [StR-002](./stakeholder/StR-002-deterministic-pinning.md) | Deterministic Plugin Pinning and Reproducible Installs       |
+| [StR-003](./stakeholder/StR-003-fast-reconciliation.md) | Fast Per-Invocation Reconciliation                           |
+| [US-001](./usecase/US-001-reconcile-default-set.md)  | Reconcile a Default Plugin Set                               |
+| [US-002](./usecase/US-002-install-ad-hoc-source.md)  | Install an Ad-Hoc Source and Derive Its Name                 |
+| [FR-001](./functional/FR-001-typed-source-union.md)  | Typed Source Union and Structural Validation                 |
+| [FR-002](./functional/FR-002-git-url-shorthand.md)  | Git URL Shorthand Expansion                                  |
+| [FR-003](./functional/FR-003-manifest-validation.md)  | Marketplace Manifest Validation                              |
+| [FR-004](./functional/FR-004-source-resolution.md)  | Synchronous Source Resolution and Pinning                    |
+| [FR-005](./functional/FR-005-install-registry.md)  | Install Registry: Read, Atomic Write, and Upsert             |
+| [FR-006](./functional/FR-006-single-entry-install.md)  | Single-Entry Install and Materialization                     |
+| [FR-007](./functional/FR-007-reconcile.md)  | Default-Set Reconciliation (Lazy and Sync)                   |
+| [NFR-001](./non-functional/NFR-001-zero-runtime-dependencies.md) | Zero Runtime Dependencies                                    |
+| [NFR-002](./non-functional/NFR-002-full-test-coverage.md) | One-Hundred-Percent Enforced Test Coverage                   |
+| [NFR-003](./non-functional/NFR-003-synchronous-zero-git-hot-path.md) | Synchronous Resolution with a Zero-Git Settled Hot Path      |
+| [NFR-004](./non-functional/NFR-004-cache-target-isolation.md) | Cache and Target Directory Isolation                         |
 
 ---
 
@@ -230,7 +230,7 @@ All functional requirements SHALL:
 
 ### 8.1 Source Descriptors
 
-A plugin/marketplace `source` is a discriminated union keyed by `type` (FR-001):
+A plugin/marketplace `source` is a discriminated union keyed by `type` ([FR-001](./functional/FR-001-typed-source-union.md)):
 
 | `type`       | Fields                             | Resolution                                                                      |
 | ------------ | ---------------------------------- | ------------------------------------------------------------------------------- |
@@ -242,17 +242,17 @@ A plugin/marketplace `source` is a discriminated union keyed by `type` (FR-001):
 | `npm`        | `package`, `version?`, `registry?` | **reserved** — `UnsupportedSourceError` (hosts may build install specs from it) |
 
 `normalizeSource` validates that the required string fields of each variant are
-non-empty, throwing `SourceError` on malformed input (FR-001). `toGitUrl` passes
+non-empty, throwing `SourceError` on malformed input ([FR-001](./functional/FR-001-typed-source-union.md)). `toGitUrl` passes
 full URLs (`://` or `git@`) through unchanged and expands an `owner/repo`
-shorthand to `https://github.com/owner/repo.git` (FR-002).
+shorthand to `https://github.com/owner/repo.git` ([FR-002](./functional/FR-002-git-url-shorthand.md)).
 
 ### 8.2 Pinning and Determinism
 
 `resolveSource` records a **durable commit sha** as the pin for every git source,
-in addition to echoing back the requested `ref` (FR-004). Resolution checks out
+in addition to echoing back the requested `ref` ([FR-004](./functional/FR-004-source-resolution.md)). Resolution checks out
 `source.sha ?? source.ref ?? "HEAD"` in that precedence. Because the resolved sha
 is persisted in the registry record, drift can be detected (sync mode) and a
-settled lazy reconcile can short-circuit with no git at all (FR-007, NFR-003).
+settled lazy reconcile can short-circuit with no git at all ([FR-007](./functional/FR-007-reconcile.md), [NFR-003](./non-functional/NFR-003-synchronous-zero-git-hot-path.md)).
 
 ---
 
@@ -263,14 +263,14 @@ settled lazy reconcile can short-circuit with no git at all (FR-007, NFR-003).
 `installEntry` resolves a source, computes the content root
 (`entry.path`-relative when given), derives the install `name`
 (`entry.name ?? readName(contentRoot)`), and materializes that content root into
-`<targetRoot>/<name>` (FR-006). Materialization mode is `copy` (default — owned
+`<targetRoot>/<name>` ([FR-006](./functional/FR-006-single-entry-install.md)). Materialization mode is `copy` (default — owned
 files) or `symlink` (points at the cache); an existing target is removed first so
 re-installs are clean. The install is then recorded in the registry via
 `upsertPlugin` + `writeRegistry`.
 
 ### 9.2 Reconciliation
 
-`reconcile` walks a manifest's entries and, per entry (FR-007):
+`reconcile` walks a manifest's entries and, per entry ([FR-007](./functional/FR-007-reconcile.md)):
 
 - `defaultEnabled === false` → **skipped** (recorded, never resolved).
 - **lazy mode**, entry already present in the registry, its target dir still
@@ -287,33 +287,33 @@ The **cache root** (`<cacheRoot>/git/<key>`, where `<key>` is the sanitized URL)
 holds clones, and the **target root** (`<targetRoot>/<name>`) holds materialized
 modules; the **registry path** is a separate JSON file. These three are distinct
 host-supplied paths and SHALL NOT collide with each other or with a host's own
-plugin data dir (NFR-004).
+plugin data dir ([NFR-004](./non-functional/NFR-004-cache-target-isolation.md)).
 
 ---
 
 ## 10. Error and Failure Model
 
 - `SourceError` — a structurally invalid source descriptor, or a `path` source
-  whose directory does not exist (FR-001, FR-004).
+  whose directory does not exist ([FR-001](./functional/FR-001-typed-source-union.md), [FR-004](./functional/FR-004-source-resolution.md)).
 - `UnsupportedSourceError` — a valid-but-reserved `url` / `npm` source passed to
-  `resolveSource` (FR-004).
+  `resolveSource` ([FR-004](./functional/FR-004-source-resolution.md)).
 - `ManifestError` — a malformed manifest object or entry passed to
-  `validateMarketplaceManifest` (FR-003).
+  `validateMarketplaceManifest` ([FR-003](./functional/FR-003-manifest-validation.md)).
 - A missing or **shape-invalid** registry file (valid JSON whose `plugins` is not
-  an array, e.g. `{}`) reads as an **empty** registry rather than throwing (FR-005).
+  an array, e.g. `{}`) reads as an **empty** registry rather than throwing ([FR-005](./functional/FR-005-install-registry.md)).
   A registry file that is not valid JSON currently throws from the unguarded
   `JSON.parse`; the atomic write below exists to avoid producing such a file.
 - The registry is written atomically (temp file named `<path>.<pid>.tmp`, then
-  `rename`) so a crash mid-write never leaves a partial registry (FR-005).
+  `rename`) so a crash mid-write never leaves a partial registry ([FR-005](./functional/FR-005-install-registry.md)).
 - **Git subprocess failures propagate.** `resolveSource` runs git via
   `execFileSync` (the default `GitRunner`), which throws on any nonzero git exit —
   a clone of an unreachable/private repo, a fetch failure, or a checkout of a
   ref/sha that does not exist. These are surfaced as the underlying thrown error,
-  not wrapped in a `SourceError` (FR-004). The library defines no `ResolveError`
+  not wrapped in a `SourceError` ([FR-004](./functional/FR-004-source-resolution.md)). The library defines no `ResolveError`
   type today; see §14 Known Limitations.
 - **Materialization is not crash-atomic.** `installEntry` removes an existing
   target before re-creating it (copy or symlink); if the create then fails, the
-  prior materialized module is gone (FR-006). Only the registry write is atomic.
+  prior materialized module is gone ([FR-006](./functional/FR-006-single-entry-install.md)). Only the registry write is atomic.
 
 ---
 
@@ -336,7 +336,7 @@ Bidirectional traceability SHALL be maintained between:
 - An injectable `GitRunner` lets resolution tests run without a real network and
   assert the exact git argv.
 - Coverage is gated at 100% (branches, functions, lines, statements) in
-  `vite.config.ts` (NFR-002).
+  `vite.config.ts` ([NFR-002](./non-functional/NFR-002-full-test-coverage.md)).
 
 ---
 
@@ -344,8 +344,8 @@ Bidirectional traceability SHALL be maintained between:
 
 Cross-references in artifact `relationships` frontmatter and in `tests.md` address
 requirements by their **ID**, not by their slug filename. A target such as
-`ix://agent-ix/ts-plugin-kit/spec/functional/FR-004` resolves to the file
-`spec/functional/FR-004-<slug>.md` (the file whose frontmatter `id` is `FR-004`).
+[FR-004](./functional/FR-004-source-resolution.md) resolves to the file
+[FR-004](./functional/FR-004-source-resolution.md) (the file whose frontmatter `id` is [FR-004](./functional/FR-004-source-resolution.md)).
 This matches the addressing used across the IX spec ecosystem (e.g.
 `ix://agent-ix/ix-cli-core/.../FR-019`). Tools resolve ID → file; the slug in the
 filename is descriptive only.
@@ -363,9 +363,9 @@ present requirements describe the library as it actually behaves.
   `git-subdir` whose subdir is absent at the resolved ref returns a `dir` that does
   not exist on disk, and the failure surfaces later in `installEntry`'s copy/symlink.
 - **Malformed-JSON registry throws.** `readRegistry` tolerates a shape-invalid but
-  valid-JSON file; a non-JSON file throws `SyntaxError` (FR-005).
+  valid-JSON file; a non-JSON file throws `SyntaxError` ([FR-005](./functional/FR-005-install-registry.md)).
 - **Non-atomic materialization.** A failed re-install can leave no module
-  (§10, FR-006).
+  (§10, [FR-006](./functional/FR-006-single-entry-install.md)).
 - **Cache-key collisions.** `cacheKey` replaces every non-`[A-Za-z0-9._-]` char with
   `_`, so two distinct URLs can map to one cache dir; there is no collision check.
 - **Symlink installs are not pin-stable.** In `symlink` mode the target points into
@@ -376,9 +376,9 @@ present requirements describe the library as it actually behaves.
   `<pid>` in the temp name disambiguates processes but not intra-process races.
 - **Lazy reconcile does not chase `HEAD`.** An entry with neither `sha` nor `ref`
   matches as `unchanged` on every subsequent lazy reconcile (`undefined === undefined`)
-  and is never re-resolved in `lazy` mode; use `sync` mode to re-resolve (FR-007).
+  and is never re-resolved in `lazy` mode; use `sync` mode to re-resolve ([FR-007](./functional/FR-007-reconcile.md)).
 - **Unbounded `defaultEnabled`.** Only the literal `false` skips an entry; any other
-  value (including `undefined`, the documented default) enables it (FR-007).
+  value (including `undefined`, the documented default) enables it ([FR-007](./functional/FR-007-reconcile.md)).
 
 ---
 

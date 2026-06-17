@@ -17,7 +17,7 @@ relationships:
 The test suite SHALL maintain 100% coverage of `src/**` across all four coverage
 dimensions (branches, functions, lines, statements), and the build SHALL **fail**
 when coverage drops below 100% on any dimension. This gate is the standing
-guarantee that every behavioral branch specified in FR-001 through FR-007 is
+guarantee that every behavioral branch specified in [FR-001](../functional/FR-001-typed-source-union.md) through [FR-007](../functional/FR-007-reconcile.md) is
 exercised.
 
 ## Measurement and Evaluation

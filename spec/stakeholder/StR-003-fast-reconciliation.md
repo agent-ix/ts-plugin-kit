@@ -40,5 +40,5 @@ This need is considered satisfied when:
 
 ## Dependencies
 
-- Satisfied by FR-007 (lazy/sync reconcile with the zero-git settled path).
-- The zero-git hot-path property is constrained by NFR-003.
+- Satisfied by [FR-007](../functional/FR-007-reconcile.md) (lazy/sync reconcile with the zero-git settled path).
+- The zero-git hot-path property is constrained by [NFR-003](../non-functional/NFR-003-synchronous-zero-git-hot-path.md).

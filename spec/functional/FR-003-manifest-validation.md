@@ -35,14 +35,14 @@ dependency-free.
   "entry &lt;i&gt; must be an object") for a non-object entry; throw `ManifestError`
   (message mentions `non-empty name`) when an entry's `name` is missing or empty;
   and run
-  `normalizeSource(entry.source)` (FR-001), which throws `SourceError` for a bad
-  source — note that, unlike `installEntry` (FR-006), a manifest entry's `name`
+  `normalizeSource(entry.source)` ([FR-001](./FR-001-typed-source-union.md)), which throws `SourceError` for a bad
+  source — note that, unlike `installEntry` ([FR-006](./FR-006-single-entry-install.md)), a manifest entry's `name`
   is **required** here.
 
 Each `MarketplaceEntry` field has the following meaning: `version` is an
 informational pin label not used for resolution; `defaultEnabled` defaults to
-true and, when `false`, causes reconcile to skip the entry (FR-007); `path` is an
-optional subdir within the resolved source that holds the module root (FR-006).
+true and, when `false`, causes reconcile to skip the entry ([FR-007](./FR-007-reconcile.md)); `path` is an
+optional subdir within the resolved source that holds the module root ([FR-006](./FR-006-single-entry-install.md)).
 
 ## Acceptance Criteria
 
@@ -57,5 +57,5 @@ optional subdir within the resolved source that holds the module root (FR-006).
 
 ## Dependencies
 
-- Implements StR-001 (host-parsed object keeps the library dep-free).
-- Requires FR-001 (`normalizeSource` validates each entry's source).
+- Implements [StR-001](../stakeholder/StR-001-shared-zero-dep-install-mechanism.md) (host-parsed object keeps the library dep-free).
+- Requires [FR-001](./FR-001-typed-source-union.md) (`normalizeSource` validates each entry's source).

@@ -42,5 +42,5 @@ name a module; naming is entirely the host's callback.
 
 ## Dependencies
 
-- Traces to StR-001 (framework-agnostic mechanism: host supplies `readName`).
-- Satisfied by FR-006 (single-entry install and materialization).
+- Traces to [StR-001](../stakeholder/StR-001-shared-zero-dep-install-mechanism.md) (framework-agnostic mechanism: host supplies `readName`).
+- Satisfied by [FR-006](../functional/FR-006-single-entry-install.md) (single-entry install and materialization).

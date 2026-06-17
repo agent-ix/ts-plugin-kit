@@ -18,7 +18,7 @@ The published package SHALL declare **zero runtime dependencies**. The library
 SHALL import only Node.js built-in modules (`node:child_process`, `node:fs`,
 `node:path`, `node:os` is test-only) and SHALL NOT add a YAML/JSON parser, a git
 library, or any third-party package to the runtime closure. Manifest text parsing
-is delegated to the host (FR-003), which passes a plain object.
+is delegated to the host ([FR-003](../functional/FR-003-manifest-validation.md)), which passes a plain object.
 
 ## Measurement and Evaluation
 

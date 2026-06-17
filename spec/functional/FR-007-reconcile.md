@@ -34,7 +34,7 @@ default set into `targetRoot` and returns a `ReconcileResult`
   matches (sha-exact when the source has a `sha`, else requested-`ref` equality),
   push the existing record to `unchanged` and continue — performing **no git
   invocation**. This is the settled hot path.
-- **Otherwise**: call `installEntry(entry, opts)` (FR-006). If there was no
+- **Otherwise**: call `installEntry(entry, opts)` ([FR-006](./FR-006-single-entry-install.md)). If there was no
   existing record, push to `installed`. Else, in `sync` mode, if the freshly
   resolved sha equals the existing record's sha, push to `unchanged`; in all other
   cases push to `updated`.
@@ -69,6 +69,6 @@ an absence of side effects.
 
 ## Dependencies
 
-- Implements StR-003 (fast per-invocation reconcile with a zero-git settled path).
-- Requires FR-006 (`installEntry`) and FR-005 (registry read for the unchanged
+- Implements [StR-003](../stakeholder/StR-003-fast-reconciliation.md) (fast per-invocation reconcile with a zero-git settled path).
+- Requires [FR-006](./FR-006-single-entry-install.md) (`installEntry`) and [FR-005](./FR-005-install-registry.md) (registry read for the unchanged
   decision).

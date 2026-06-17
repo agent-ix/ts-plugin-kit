@@ -27,7 +27,7 @@ host-supplied `readName(dir)` callback, and an optional `materialize` mode
 
 `installEntry` SHALL:
 
-- Resolve the entry's source via `resolveSource` (FR-004).
+- Resolve the entry's source via `resolveSource` ([FR-004](./FR-004-source-resolution.md)).
 - Compute the content root: `<resolved.dir>/<entry.path>` when `entry.path` is set,
   otherwise `resolved.dir`. (This applies `entry.path` against a whole-repo source,
   complementing the `git-subdir` sparse-checkout.)
@@ -45,7 +45,7 @@ host-supplied `readName(dir)` callback, and an optional `materialize` mode
 - Build an `InstalledPlugin` record (`name`, `source`, `ref`, `sha`,
   `resolvedPath = contentRoot`, `targetPath`, `installedAt = now ISO-8601`) and
   persist it via `writeRegistry(upsertPlugin(readRegistry(registryPath), record))`
-  (FR-005), then return the record.
+  ([FR-005](./FR-005-install-registry.md)), then return the record.
 
 ## Acceptance Criteria
 
@@ -58,6 +58,6 @@ host-supplied `readName(dir)` callback, and an optional `materialize` mode
 
 ## Dependencies
 
-- Implements StR-001 (host supplies `readName`; library is payload-agnostic).
-- Requires FR-004 (`resolveSource`) and FR-005 (registry read/upsert/write).
-- Consumed by FR-007 (`reconcile` calls `installEntry` for missing/repinned entries).
+- Implements [StR-001](../stakeholder/StR-001-shared-zero-dep-install-mechanism.md) (host supplies `readName`; library is payload-agnostic).
+- Requires [FR-004](./FR-004-source-resolution.md) (`resolveSource`) and [FR-005](./FR-005-install-registry.md) (registry read/upsert/write).
+- Consumed by [FR-007](./FR-007-reconcile.md) (`reconcile` calls `installEntry` for missing/repinned entries).

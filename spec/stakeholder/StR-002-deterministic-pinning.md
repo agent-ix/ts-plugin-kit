@@ -11,7 +11,7 @@ relationships:
     cardinality: "1:1"
 ---
 
-## Description
+## Stakeholder Need
 
 A host that installs a plugin from git SHALL be able to reproduce exactly the
 same content later and SHALL be able to detect when a moving reference (tag or
@@ -19,20 +19,22 @@ branch) has changed underneath it. Every resolved install SHALL therefore be
 pinned to a **durable commit sha**, and that pin SHALL be persisted so a later
 run can compare against it.
 
-## Body
+## Rationale
 
-**Rationale.** Tags and branches move; "install the latest" is not reproducible. A
-host pinning to a tag still needs to know the concrete commit it got, both to
-reproduce a build and to decide whether anything changed since last time. A
-recorded sha turns "did this plugin change?" into a string comparison rather than
-a refetch, which is also what enables the fast settled reconcile (StR-003).
+Tags and branches move; "install the latest" is not reproducible. A host pinning
+to a tag still needs to know the concrete commit it got, both to reproduce a
+build and to decide whether anything changed since last time. A recorded sha
+turns "did this plugin change?" into a string comparison rather than a refetch,
+which is also what enables the fast settled reconcile (StR-003).
 
-**Context.** Resolution checks out `sha ?? ref ?? HEAD` and returns
-`{dir, sha, ref}`; the install registry persists `sha` (and the requested `ref`)
-per installed plugin. Drift detection in `sync` mode and pin-matching in `lazy`
-mode both rely on this recorded sha.
+Resolution checks out `sha ?? ref ?? HEAD` and returns `{dir, sha, ref}`; the
+install registry persists `sha` (and the requested `ref`) per installed plugin.
+Drift detection in `sync` mode and pin-matching in `lazy` mode both rely on this
+recorded sha.
 
-**Success Indicators.**
+## Validation Criteria
+
+This need is considered satisfied when:
 
 - Resolving a source pinned to a tag returns the concrete commit sha for that tag.
 - Re-resolving the same sha yields the same content.

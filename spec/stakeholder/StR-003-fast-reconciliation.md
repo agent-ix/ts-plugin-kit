@@ -8,28 +8,29 @@ relationships:
     cardinality: "1:1"
 ---
 
-## Description
+## Stakeholder Need
 
 A host CLI reconciles its default plugin set on **every invocation**. Reconciling
 an already-settled set SHALL be cheap enough to run on the per-command hot path:
 when nothing has changed, reconciliation SHALL perform **no git operation at all**
 and SHALL report each settled entry as unchanged.
 
-## Body
+## Rationale
 
-**Rationale.** If reconciling a settled set re-cloned or re-fetched, every CLI
-command would pay a network/subprocess cost, which is unacceptable for an
-interactive tool. The default (`lazy`) reconcile must therefore be a near-free
-no-op when the registry already records each enabled entry, the target directory
-still exists, and the recorded pin matches the manifest. A separate, explicit
-`sync` mode is available when the host actually wants to re-resolve and check for
-drift.
+If reconciling a settled set re-cloned or re-fetched, every CLI command would pay
+a network/subprocess cost, which is unacceptable for an interactive tool. The
+default (`lazy`) reconcile must therefore be a near-free no-op when the registry
+already records each enabled entry, the target directory still exists, and the
+recorded pin matches the manifest. A separate, explicit `sync` mode is available
+when the host actually wants to re-resolve and check for drift.
 
-**Context.** `reconcile` defaults to `lazy`. In lazy mode an entry that is present
-and pin-matched short-circuits before any `GitRunner` call. The test fixture
-asserts that the second reconcile of a settled manifest issues **zero** git calls.
+`reconcile` defaults to `lazy`. In lazy mode an entry that is present and
+pin-matched short-circuits before any `GitRunner` call. The test fixture asserts
+that the second reconcile of a settled manifest issues **zero** git calls.
 
-**Success Indicators.**
+## Validation Criteria
+
+This need is considered satisfied when:
 
 - The second lazy reconcile of an unchanged manifest performs zero git operations
   and reports every enabled entry as unchanged.

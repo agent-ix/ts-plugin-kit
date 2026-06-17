@@ -1,7 +1,9 @@
 ---
-type: test-matrix
+id: TM-001
+type: TestMatrix
 name: ts-plugin-kit
 org: agent-ix
+title: "Test Matrix"
 ---
 
 # Test Matrix

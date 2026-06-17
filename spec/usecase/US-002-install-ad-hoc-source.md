@@ -11,11 +11,12 @@ relationships:
     cardinality: "1:1"
 ---
 
-## Description
+## Story
 
-As a host CLI author, I want to install a single ad-hoc source whose name I do not
-know up front, so that the toolkit can fetch and pin it and derive its install
-name from the resolved content using my own callback.
+**As a** host CLI author
+**I want** to install a single ad-hoc source whose name I do not know up front
+**So that** the toolkit can fetch and pin it and derive its install name from the
+resolved content using my own callback.
 
 ## Body
 

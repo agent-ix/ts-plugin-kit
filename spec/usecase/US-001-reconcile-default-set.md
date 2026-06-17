@@ -11,11 +11,13 @@ relationships:
     cardinality: "1:1"
 ---
 
-## Description
+## Story
 
-As a host CLI author, I want to reconcile a marketplace manifest's default set
-into a target directory on each run, so that the enabled plugins are present and
-correctly pinned without paying a git cost when nothing has changed.
+**As a** host CLI author
+**I want** to reconcile a marketplace manifest's default set into a target
+directory on each run
+**So that** the enabled plugins are present and correctly pinned without paying a
+git cost when nothing has changed.
 
 ## Body
 

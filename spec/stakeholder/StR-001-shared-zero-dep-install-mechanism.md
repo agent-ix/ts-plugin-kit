@@ -14,7 +14,7 @@ relationships:
     cardinality: "1:N"
 ---
 
-## Description
+## Stakeholder Need
 
 Multiple Agent IX hosts (the `ix` CLI via `ix-cli-core`, `ix-spec`, future apps)
 each need to acquire plugin/marketplace content from git and other sources. Those
@@ -24,22 +24,24 @@ framework-agnostic (no knowledge of oclif, Filament, or any payload shape) and
 free of runtime dependencies so it can be embedded anywhere without supply-chain
 or framework cost.
 
-## Body
+## Rationale
 
-**Rationale.** A bespoke installer per host duplicates subtle logic (blobless
-clones, sparse checkout, sha pinning, atomic registry writes) and drifts between
-hosts. Centralizing it in a leaf library keeps every host consistent and lets the
+A bespoke installer per host duplicates subtle logic (blobless clones, sparse
+checkout, sha pinning, atomic registry writes) and drifts between hosts.
+Centralizing it in a leaf library keeps every host consistent and lets the
 mechanism be tested once to a high bar. Keeping it dependency-free and
 framework-agnostic is what makes it embeddable: the library never parses YAML
 (the host passes a parsed object), never names a payload (the host supplies a
 `readName` callback), and never assumes a CLI framework.
 
-**Context.** The library is consumed as `@agent-ix/ts-plugin-kit`. The IX-specific
-wiring (cache-root derivation, the oclif `plugins:install` bridge) lives in
+The library is consumed as `@agent-ix/ts-plugin-kit`. The IX-specific wiring
+(cache-root derivation, the oclif `plugins:install` bridge) lives in
 `ix://agent-ix/ix-cli-core` FR-019, which adapts but does not reimplement this
 library.
 
-**Success Indicators.**
+## Validation Criteria
+
+This need is considered satisfied when:
 
 - A host can install a git/path source and reconcile a manifest without adding any
   transitive runtime dependency through this library.

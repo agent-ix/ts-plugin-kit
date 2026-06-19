@@ -54,7 +54,8 @@
     "vitest": "^4.1.8"
   },
   "publishConfig": {
-    "registry": "http://npm.ix/"
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
   },
   "repository": {
     "type": "git",

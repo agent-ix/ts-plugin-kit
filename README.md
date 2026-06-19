@@ -4,6 +4,14 @@ Framework-agnostic plugin/marketplace toolkit: typed git/npm sources, ref/sha pi
 
 It is the install mechanism shared by Agent-IX CLIs and any other host (the `ix` CLI, `quoin`, a future desktop app). It knows nothing about oclif or any particular plugin payload — a host supplies a `readName` callback and decides what to do with the resolved files.
 
+## Install
+
+Published on the public npm registry:
+
+```bash
+npm install @agent-ix/ts-plugin-kit
+```
+
 ## Usage
 
 ```ts
@@ -100,7 +108,7 @@ Run `pnpm run help` or `pnpm run` to see the full list.
 
 | Command                  | Description                                   |
 | ------------------------ | --------------------------------------------- |
-| `pnpm run publish`       | Publish to GitHub Packages (upstream)         |
+| `pnpm run publish`       | Publish to the public npm registry (upstream) |
 | `pnpm run publish:local` | Publish to local npm.ix registry (via Docker) |
 | `pnpm run docker:build`  | Build release Docker image                    |
 

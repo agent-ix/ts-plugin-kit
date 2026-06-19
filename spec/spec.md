@@ -12,7 +12,7 @@ tags:
 implementation_language: typescript
 depends_on: []
 # Zero-dependency leaf: consumes nothing. It is consumed BY ix-cli-core and
-# ix-spec (see their specs), so no outgoing relationship is declared here.
+# quoin (see their specs), so no outgoing relationship is declared here.
 relationships: []
 standards_alignment:
   - iso-iec-ieee-29148
@@ -39,7 +39,7 @@ It establishes:
 - The contract that keeps the library framework-agnostic and dependency-free
 
 `@agent-ix/ts-plugin-kit` is the **install mechanism** shared by Agent IX CLIs
-and any other host (the `ix` CLI, `ix-spec`, a future desktop app). It knows
+and any other host (the `ix` CLI, `quoin`, a future desktop app). It knows
 nothing about oclif, Filament, or any particular plugin payload: a host supplies
 a `readName` callback and a target directory and decides what to do with the
 resolved files. The IX-specific adapter that wires this library into oclif and
@@ -127,7 +127,7 @@ and `git` (via `execFileSync`) is the only side effect.
 ### 3.2 Intended Users
 
 - **Host CLI authors** embedding the toolkit to acquire data/command plugins (the
-  `ix` CLI via `ix-cli-core`, `ix-spec`, future apps).
+  `ix` CLI via `ix-cli-core`, `quoin`, future apps).
 - **Marketplace authors** who publish a `MarketplaceManifest` describing a default
   set of plugin sources.
 - **Developers** whose plugin installs the toolkit pins, materializes, and records.

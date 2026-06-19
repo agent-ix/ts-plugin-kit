@@ -16,7 +16,7 @@ relationships:
 
 ## Stakeholder Need
 
-Multiple Agent IX hosts (the `ix` CLI via `ix-cli-core`, `ix-spec`, future apps)
+Multiple Agent IX hosts (the `ix` CLI via `ix-cli-core`, `quoin`, future apps)
 each need to acquire plugin/marketplace content from git and other sources. Those
 hosts SHALL share **one** install mechanism rather than each reimplementing
 fetch, pin, materialize, and registry logic, and that mechanism SHALL remain

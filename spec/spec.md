@@ -179,38 +179,38 @@ cache/target directory isolation.
 
 ## 6. Requirement Identification
 
-| Artifact                   | Format      | Example       |
-| -------------------------- | ----------- | ------------- |
-| Stakeholder Requirement    | `StR-XXX`   | [StR-001](./stakeholder/StR-001-shared-zero-dep-install-mechanism.md)     |
-| User Story                 | `US-XXX`    | [US-001](./usecase/US-001-reconcile-default-set.md)      |
-| Functional Requirement     | `FR-XXX`    | [FR-004](./functional/FR-004-source-resolution.md)      |
-| Non-Functional Requirement | `NFR-XXX`   | [NFR-001](./non-functional/NFR-001-zero-runtime-dependencies.md)     |
-| Acceptance Criteria        | `{FR}-AC-N` | [FR-004-AC-1](./functional/FR-004-source-resolution.md) |
-| Test Case                  | `TC-XXX`    | `TC-021`      |
+| Artifact                   | Format      | Example                                                               |
+| -------------------------- | ----------- | --------------------------------------------------------------------- |
+| Stakeholder Requirement    | `StR-XXX`   | [StR-001](./stakeholder/StR-001-shared-zero-dep-install-mechanism.md) |
+| User Story                 | `US-XXX`    | [US-001](./usecase/US-001-reconcile-default-set.md)                   |
+| Functional Requirement     | `FR-XXX`    | [FR-004](./functional/FR-004-source-resolution.md)                    |
+| Non-Functional Requirement | `NFR-XXX`   | [NFR-001](./non-functional/NFR-001-zero-runtime-dependencies.md)      |
+| Acceptance Criteria        | `{FR}-AC-N` | [FR-004-AC-1](./functional/FR-004-source-resolution.md)               |
+| Test Case                  | `TC-XXX`    | `TC-021`                                                              |
 
 Identifiers are immutable once assigned. IDs in this repo are a flat per-repo
 sequence (no classifier prefix).
 
 ### 6.1 Requirement Index
 
-| ID      | Title                                                        |
-| ------- | ------------------------------------------------------------ |
+| ID                                                                    | Title                                                        |
+| --------------------------------------------------------------------- | ------------------------------------------------------------ |
 | [StR-001](./stakeholder/StR-001-shared-zero-dep-install-mechanism.md) | Shared Framework-Agnostic, Zero-Dependency Install Mechanism |
-| [StR-002](./stakeholder/StR-002-deterministic-pinning.md) | Deterministic Plugin Pinning and Reproducible Installs       |
-| [StR-003](./stakeholder/StR-003-fast-reconciliation.md) | Fast Per-Invocation Reconciliation                           |
-| [US-001](./usecase/US-001-reconcile-default-set.md)  | Reconcile a Default Plugin Set                               |
-| [US-002](./usecase/US-002-install-ad-hoc-source.md)  | Install an Ad-Hoc Source and Derive Its Name                 |
-| [FR-001](./functional/FR-001-typed-source-union.md)  | Typed Source Union and Structural Validation                 |
-| [FR-002](./functional/FR-002-git-url-shorthand.md)  | Git URL Shorthand Expansion                                  |
-| [FR-003](./functional/FR-003-manifest-validation.md)  | Marketplace Manifest Validation                              |
-| [FR-004](./functional/FR-004-source-resolution.md)  | Synchronous Source Resolution and Pinning                    |
-| [FR-005](./functional/FR-005-install-registry.md)  | Install Registry: Read, Atomic Write, and Upsert             |
-| [FR-006](./functional/FR-006-single-entry-install.md)  | Single-Entry Install and Materialization                     |
-| [FR-007](./functional/FR-007-reconcile.md)  | Default-Set Reconciliation (Lazy and Sync)                   |
-| [NFR-001](./non-functional/NFR-001-zero-runtime-dependencies.md) | Zero Runtime Dependencies                                    |
-| [NFR-002](./non-functional/NFR-002-full-test-coverage.md) | One-Hundred-Percent Enforced Test Coverage                   |
-| [NFR-003](./non-functional/NFR-003-synchronous-zero-git-hot-path.md) | Synchronous Resolution with a Zero-Git Settled Hot Path      |
-| [NFR-004](./non-functional/NFR-004-cache-target-isolation.md) | Cache and Target Directory Isolation                         |
+| [StR-002](./stakeholder/StR-002-deterministic-pinning.md)             | Deterministic Plugin Pinning and Reproducible Installs       |
+| [StR-003](./stakeholder/StR-003-fast-reconciliation.md)               | Fast Per-Invocation Reconciliation                           |
+| [US-001](./usecase/US-001-reconcile-default-set.md)                   | Reconcile a Default Plugin Set                               |
+| [US-002](./usecase/US-002-install-ad-hoc-source.md)                   | Install an Ad-Hoc Source and Derive Its Name                 |
+| [FR-001](./functional/FR-001-typed-source-union.md)                   | Typed Source Union and Structural Validation                 |
+| [FR-002](./functional/FR-002-git-url-shorthand.md)                    | Git URL Shorthand Expansion                                  |
+| [FR-003](./functional/FR-003-manifest-validation.md)                  | Marketplace Manifest Validation                              |
+| [FR-004](./functional/FR-004-source-resolution.md)                    | Synchronous Source Resolution and Pinning                    |
+| [FR-005](./functional/FR-005-install-registry.md)                     | Install Registry: Read, Atomic Write, and Upsert             |
+| [FR-006](./functional/FR-006-single-entry-install.md)                 | Single-Entry Install and Materialization                     |
+| [FR-007](./functional/FR-007-reconcile.md)                            | Default-Set Reconciliation (Lazy and Sync)                   |
+| [NFR-001](./non-functional/NFR-001-zero-runtime-dependencies.md)      | Zero Runtime Dependencies                                    |
+| [NFR-002](./non-functional/NFR-002-full-test-coverage.md)             | One-Hundred-Percent Enforced Test Coverage                   |
+| [NFR-003](./non-functional/NFR-003-synchronous-zero-git-hot-path.md)  | Synchronous Resolution with a Zero-Git Settled Hot Path      |
+| [NFR-004](./non-functional/NFR-004-cache-target-isolation.md)         | Cache and Target Directory Isolation                         |
 
 ---
 

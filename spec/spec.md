@@ -62,16 +62,19 @@ and reconciling a manifest's default set into a host-owned target directory.**
 This specification governs:
 
 - **Typed `Source` union and validation** — the `github` / `git-subdir` / `git` /
-  `path` source descriptors (implemented) and the reserved `npm` / `url`
-  descriptors, `normalizeSource` structural validation, and the `toGitUrl`
+  `path` / `npm` source descriptors (implemented) and the reserved `url`
+  descriptor, `normalizeSource` structural validation, and the `toGitUrl`
   `owner/repo` shorthand expansion ([FR-001](./functional/FR-001-typed-source-union.md), [FR-002](./functional/FR-002-git-url-shorthand.md)).
 - **Marketplace manifest validation** — `MarketplaceManifest` / `MarketplaceEntry`
   shapes and `validateMarketplaceManifest`, which validates a host-parsed plain
   object (the host owns YAML/JSON parsing, keeping this library dep-free) ([FR-003](./functional/FR-003-manifest-validation.md)).
-- **Source resolution** — `resolveSource`, a synchronous, `git`-only fetcher that
-  blobless-clones, sparse-checks-out subdirs, checks out a sha/ref/HEAD, returns a
-  durable `{dir, sha, ref}` pin, and throws `UnsupportedSourceError` for reserved
-  types; the `GitRunner` is injectable for testing ([FR-004](./functional/FR-004-source-resolution.md)).
+- **Source resolution** — `resolveSource`, a synchronous fetcher that, for git
+  sources, blobless-clones, sparse-checks-out subdirs, checks out a sha/ref/HEAD,
+  and returns a durable `{dir, sha, ref}` pin, and, for `npm` sources, `npm
+pack`s + extracts the tarball under `<cacheRoot>/npm/<key>` and pins the resolved
+  published version as the `sha`; it throws `UnsupportedSourceError` for the
+  reserved `url` type. The `GitRunner` and `NpmFetcher` are injectable for testing
+  ([FR-004](./functional/FR-004-source-resolution.md)).
 - **Install registry** — `InstalledPlugin` / `PluginRegistry`, `readRegistry` /
   `writeRegistry` (atomic temp+rename), and `upsertPlugin` (last-write-wins by
   name) ([FR-005](./functional/FR-005-install-registry.md)).
@@ -89,10 +92,10 @@ This specification does not govern:
 
 - **YAML / JSON parsing.** The host parses manifest text and passes a plain
   object to `validateMarketplaceManifest`; this library adds no parser dependency.
-- **`npm` and `url` source resolution.** The `npm` and `url` descriptors exist in
-  the type so hosts can build install specs (e.g. an oclif `plugins:install`
-  bridge), but their resolution is deliberately deferred — `resolveSource` throws
-  `UnsupportedSourceError` ([FR-004](./functional/FR-004-source-resolution.md)).
+- **`url` source resolution.** The `url` descriptor exists in the type so hosts can
+  build install specs, but its resolution is deliberately deferred —
+  `resolveSource` throws `UnsupportedSourceError` ([FR-004](./functional/FR-004-source-resolution.md)). (The
+  `npm` descriptor **is** now resolved, via `npm pack` + `tar`.)
 - **What a "name" means.** The library never inspects payload contents to derive a
   module name; the host supplies a `readName(dir)` callback ([FR-006](./functional/FR-006-single-entry-install.md)).
 - **What the materialized files are for.** The library copies/symlinks bytes into
@@ -112,17 +115,18 @@ This specification does not govern:
 `@agent-ix/ts-plugin-kit` is a single publishable TypeScript library (npm package
 `@agent-ix/ts-plugin-kit`) with **zero runtime dependencies**. It exposes the
 building blocks below as pure ES-module functions; every operation is synchronous
-and `git` (via `execFileSync`) is the only side effect.
+and the only side effect is a per-source package-manager subprocess (via
+`execFileSync`): `git` for git sources, and `npm pack` + `tar` for `npm` sources.
 
-| Module         | Responsibility                                                                                       |
-| -------------- | ---------------------------------------------------------------------------------------------------- |
-| `sources.ts`   | `Source` union, `SourceType`, `SourceError`, `UnsupportedSourceError`, `normalizeSource`, `toGitUrl` |
-| `manifest.ts`  | `MarketplaceEntry`, `MarketplaceManifest`, `ManifestError`, `validateMarketplaceManifest`            |
-| `resolve.ts`   | `GitRunner`, `defaultGitRunner`, `ResolveOptions`, `ResolvedSource`, `resolveSource`                 |
-| `registry.ts`  | `InstalledPlugin`, `PluginRegistry`, `readRegistry`, `writeRegistry`, `upsertPlugin`                 |
-| `install.ts`   | `InstallOptions`, `installEntry`                                                                     |
-| `reconcile.ts` | `ReconcileOptions`, `ReconcileResult`, `reconcile`                                                   |
-| `index.ts`     | The public barrel re-exporting the above                                                             |
+| Module         | Responsibility                                                                                                                         |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `sources.ts`   | `Source` union, `SourceType`, `SourceError`, `UnsupportedSourceError`, `normalizeSource`, `toGitUrl`                                   |
+| `manifest.ts`  | `MarketplaceEntry`, `MarketplaceManifest`, `ManifestError`, `validateMarketplaceManifest`                                              |
+| `resolve.ts`   | `GitRunner`, `defaultGitRunner`, `NpmFetcher`, `defaultNpmFetcher`, `npmPackArgs`, `ResolveOptions`, `ResolvedSource`, `resolveSource` |
+| `registry.ts`  | `InstalledPlugin`, `PluginRegistry`, `readRegistry`, `writeRegistry`, `upsertPlugin`                                                   |
+| `install.ts`   | `InstallOptions`, `installEntry`                                                                                                       |
+| `reconcile.ts` | `ReconcileOptions`, `ReconcileResult`, `reconcile`                                                                                     |
+| `index.ts`     | The public barrel re-exporting the above                                                                                               |
 
 ### 3.2 Intended Users
 
@@ -239,7 +243,7 @@ A plugin/marketplace `source` is a discriminated union keyed by `type` ([FR-001]
 | `git`        | `url`, `ref?`, `sha?`              | git clone of the whole repo at pin                                              |
 | `path`       | `path`                             | local directory (dev); returned as-is                                           |
 | `url`        | `url`, `ref?`, `sha?`              | **reserved** — `UnsupportedSourceError`                                         |
-| `npm`        | `package`, `version?`, `registry?` | **reserved** — `UnsupportedSourceError` (hosts may build install specs from it) |
+| `npm`        | `package`, `version?`, `registry?` | `npm pack` tarball + extract; the resolved published version is the durable pin |
 
 `normalizeSource` validates that the required string fields of each variant are
 non-empty, throwing `SourceError` on malformed input ([FR-001](./functional/FR-001-typed-source-union.md)). `toGitUrl` passes
@@ -250,9 +254,12 @@ shorthand to `https://github.com/owner/repo.git` ([FR-002](./functional/FR-002-g
 
 `resolveSource` records a **durable commit sha** as the pin for every git source,
 in addition to echoing back the requested `ref` ([FR-004](./functional/FR-004-source-resolution.md)). Resolution checks out
-`source.sha ?? source.ref ?? "HEAD"` in that precedence. Because the resolved sha
-is persisted in the registry record, drift can be detected (sync mode) and a
-settled lazy reconcile can short-circuit with no git at all ([FR-007](./functional/FR-007-reconcile.md), [NFR-003](./non-functional/NFR-003-synchronous-zero-git-hot-path.md)).
+`source.sha ?? source.ref ?? "HEAD"` in that precedence. For an `npm` source, the
+**resolved published version** plays the role of the `sha` pin (and the requested
+`source.version` is echoed as `ref`); exact-version pins are reused from the npm
+cache, while unpinned/range specs re-fetch to honor "latest". Because the resolved
+sha/version is persisted in the registry record, drift can be detected (sync mode)
+and a settled lazy reconcile can short-circuit with no git at all ([FR-007](./functional/FR-007-reconcile.md), [NFR-003](./non-functional/NFR-003-synchronous-zero-git-hot-path.md)).
 
 ---
 
@@ -295,8 +302,8 @@ plugin data dir ([NFR-004](./non-functional/NFR-004-cache-target-isolation.md)).
 
 - `SourceError` — a structurally invalid source descriptor, or a `path` source
   whose directory does not exist ([FR-001](./functional/FR-001-typed-source-union.md), [FR-004](./functional/FR-004-source-resolution.md)).
-- `UnsupportedSourceError` — a valid-but-reserved `url` / `npm` source passed to
-  `resolveSource` ([FR-004](./functional/FR-004-source-resolution.md)).
+- `UnsupportedSourceError` — a valid-but-reserved `url` source passed to
+  `resolveSource` (the `npm` source is now resolved) ([FR-004](./functional/FR-004-source-resolution.md)).
 - `ManifestError` — a malformed manifest object or entry passed to
   `validateMarketplaceManifest` ([FR-003](./functional/FR-003-manifest-validation.md)).
 - A missing or **shape-invalid** registry file (valid JSON whose `plugins` is not

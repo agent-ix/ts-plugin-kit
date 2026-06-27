@@ -97,6 +97,7 @@ real `npm`/network (FR-004-AC-8, -AC-9).
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------- |
 | FR-004-CON-1 | The only side effect is the per-source package-manager subprocess (`git` for git sources; `npm pack` + `tar` for npm sources); resolution performs no other network or I/O beyond filesystem reads/dir creation. | architectural | Test (TC-011) |
 | FR-004-CON-2 | The clone is blobless and no-checkout (`--filter=blob:none --no-checkout`); subdir sources sparse-checkout only the requested path.                                                                              | performance   | Test (TC-008) |
+| FR-004-CON-3 | `normalizeSource` rejects an `npm` `package` beginning with `-`, so it cannot reach `npm pack` as a CLI flag (second-order command-line-injection guard).                                                        | security      | Test (TC-026) |
 
 ## Acceptance Criteria
 

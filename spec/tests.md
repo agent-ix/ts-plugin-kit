@@ -21,7 +21,7 @@ today under `make test` (vitest) at the 100% coverage gate (NFR-002).
 
 > **Concurrent-PR note.** TC-022…TC-054 are a shared TC-ID block also claimed by
 > the concurrent `feat/plugin-discovery` PR. This (`feat/npm-source-resolution`)
-> PR lands first and uses TC-022…TC-025 for npm source resolution; the two
+> PR lands first and uses TC-022…TC-026 for npm source resolution; the two
 > matrices will be **reconciled at the second merge** so the IDs do not collide.
 
 Tests fall into the following types:
@@ -109,6 +109,7 @@ partial clones work offline.
 | FR-004         | AC-9: exact-version pin cached; unpinned re-fetches               | TC-023 — `resolveSource › "exact-version npm pins are cached; unpinned specs re-fetch"`                                                                   | ✅ Unit (fake)     |
 | FR-004         | AC-10: defaultNpmFetcher local-pack offline (npm pack + tar)      | TC-024 — `resolveSource › "defaultNpmFetcher packs and extracts a local package offline"`                                                                 | ✅ Unit (npm)      |
 | FR-004         | AC-11: npmPackArgs builds pinned/unpinned + registry argv         | TC-025 — `resolveSource › "npmPackArgs builds pinned, unpinned, and registry argv"`                                                                       | ✅ Unit            |
+| FR-004         | CON-3: rejects option-like npm package (injection guard)          | TC-026 — `normalizeSource › "rejects malformed input"` (option-like `-x` package assertion)                                                               | ✅ Unit            |
 | FR-005         | AC-1: missing / shape-invalid (`{}`) registry read as empty       | TC-012 — `registry › "missing and malformed files read as empty"`                                                                                         | ✅ Unit            |
 | FR-005         | AC-2: atomic write + nested-dir creation round-trips              | TC-013 — `registry › "write is atomic and round-trips; upsert replaces by name"`                                                                          | ✅ Unit            |
 | FR-005         | AC-3: upsert replaces by name (count stays 1)                     | TC-013 — `registry › "write is atomic and round-trips; upsert replaces by name"`                                                                          | ✅ Unit            |
@@ -164,8 +165,9 @@ partial clones work offline.
 | TC-023  | resolveSource exact-cache vs unpinned-refetch (fake fetcher)    | Unit (fake)     | P0       | FR-004-AC-9                                     | ✅     |
 | TC-024  | defaultNpmFetcher local-pack offline (npm pack + tar)           | Unit (npm)      | P1       | FR-004-AC-10                                    | ✅     |
 | TC-025  | npmPackArgs pinned/unpinned + registry argv                     | Unit            | P1       | FR-004-AC-11                                    | ✅     |
+| TC-026  | normalizeSource rejects option-like npm package (`-x`)          | Unit            | P0       | FR-004-CON-3                                    | ✅     |
 
-> TC-022…TC-025 belong to the shared TC-022…TC-054 block also used by the
+> TC-022…TC-026 belong to the shared TC-022…TC-054 block also used by the
 > concurrent `feat/plugin-discovery` PR; IDs are reconciled at the second merge
 > (this PR lands first).
 
@@ -173,10 +175,11 @@ partial clones work offline.
 
 ## Constraint Boundary Tests
 
-| Constraint   | Boundary / Case                                    | Test Value                               | Test Case      | Expected                                       |
-| ------------ | -------------------------------------------------- | ---------------------------------------- | -------------- | ---------------------------------------------- |
-| FR-004-CON-1 | package-manager subprocess is the sole side effect | injected fake `GitRunner` / `NpmFetcher` | TC-011, TC-022 | resolves with no real git/npm; argv[0]=`clone` |
-| FR-004-CON-2 | blobless + sparse                                  | `git-subdir` at `v0.2.0`                 | TC-008         | only the subdir present; tag sha resolved      |
+| Constraint   | Boundary / Case                                    | Test Value                               | Test Case      | Expected                                             |
+| ------------ | -------------------------------------------------- | ---------------------------------------- | -------------- | ---------------------------------------------------- |
+| FR-004-CON-1 | package-manager subprocess is the sole side effect | injected fake `GitRunner` / `NpmFetcher` | TC-011, TC-022 | resolves with no real git/npm; argv[0]=`clone`       |
+| FR-004-CON-2 | blobless + sparse                                  | `git-subdir` at `v0.2.0`                 | TC-008         | only the subdir present; tag sha resolved            |
+| FR-004-CON-3 | option-like npm package rejected                   | `{type:"npm", package:"-x"}`             | TC-026         | `SourceError` "must not begin with -"; no `npm pack` |
 
 ---
 
@@ -253,4 +256,4 @@ Recorded during /spec-review. None block the spec; each is a candidate test/hard
 - The `url` source variant is deliberately unimplemented (FR-004-AC-3); there is
   therefore no happy-path TC for it, only the `UnsupportedSourceError` assertion
   (TC-007). This is correct, not a coverage gap. The `npm` variant **is** now
-  resolved (TC-022…TC-025).
+  resolved (TC-022…TC-026).

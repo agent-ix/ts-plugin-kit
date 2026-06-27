@@ -151,6 +151,10 @@ describe("normalizeSource", () => {
     expect(() => normalizeSource({ type: "url" } as Source)).toThrow(/url/);
     expect(() => normalizeSource({ type: "path" } as Source)).toThrow(/path/);
     expect(() => normalizeSource({ type: "npm" } as Source)).toThrow(/package/);
+    // An option-like package would inject a flag into `npm pack` (TC-026).
+    expect(() => normalizeSource({ type: "npm", package: "-x" })).toThrow(
+      /must not begin with/,
+    );
     expect(() =>
       normalizeSource({ type: "bogus" } as unknown as Source),
     ).toThrow(/unknown source type/);

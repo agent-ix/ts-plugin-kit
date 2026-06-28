@@ -47,6 +47,32 @@ function req(value: unknown, field: string): string {
   return value;
 }
 
+/**
+ * Like {@link req}, but also rejects an option-like value (leading `-`). Source
+ * fields that flow into a `git` argv must not be interpretable as a CLI flag —
+ * e.g. a `ref` of `--upload-pack=<cmd>` or a `repo` of `--output=…` would become
+ * a `git` option (a second-order command-line injection), so it is rejected up
+ * front, before any git invocation.
+ */
+function reqArg(value: unknown, field: string): string {
+  const v = req(value, field);
+  if (v.startsWith("-")) {
+    throw new SourceError(`source field "${field}" must not begin with "-"`);
+  }
+  return v;
+}
+
+/**
+ * Like {@link reqArg}, but for an optional field (`ref`/`sha`): `undefined`
+ * passes through, but any present value must be a non-empty, non-option-like
+ * string. `git checkout` does not accept a `--` separator cleanly before a ref,
+ * so an option-like ref/sha is rejected rather than escaped.
+ */
+function optArg(value: unknown, field: string): void {
+  if (value === undefined) return;
+  reqArg(value, field);
+}
+
 /** Validate a source descriptor, throwing {@link SourceError} on malformed input. */
 export function normalizeSource(source: Source): Source {
   if (!source || typeof (source as { type?: unknown }).type !== "string") {
@@ -54,17 +80,25 @@ export function normalizeSource(source: Source): Source {
   }
   switch (source.type) {
     case "github":
-      req(source.repo, "repo");
+      reqArg(source.repo, "repo");
+      optArg(source.ref, "ref");
+      optArg(source.sha, "sha");
       return source;
     case "git":
-      req(source.url, "url");
+      reqArg(source.url, "url");
+      optArg(source.ref, "ref");
+      optArg(source.sha, "sha");
       return source;
     case "git-subdir":
-      req(source.url, "url");
+      reqArg(source.url, "url");
       req(source.path, "path");
+      optArg(source.ref, "ref");
+      optArg(source.sha, "sha");
       return source;
     case "url":
-      req(source.url, "url");
+      reqArg(source.url, "url");
+      optArg(source.ref, "ref");
+      optArg(source.sha, "sha");
       return source;
     case "path":
       req(source.path, "path");

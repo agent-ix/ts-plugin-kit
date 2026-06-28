@@ -73,44 +73,45 @@ partial clones work offline.
 
 ## Functional Requirement Coverage
 
-| Functional Req | Acceptance Criteria                                               | Test Case · Case String                                                                                                | Coverage Status |
-| -------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | --------------- |
-| FR-001         | AC-1: all six valid source shapes accepted                        | TC-001 — `normalizeSource › "accepts every valid shape"`                                                               | ✅ Unit         |
-| FR-001         | AC-2: null / no-`type` → SourceError                              | TC-002 — `normalizeSource › "rejects malformed input"`                                                                 | ✅ Unit         |
-| FR-001         | AC-3: missing required field → SourceError naming the field       | TC-002 — `normalizeSource › "rejects malformed input"`                                                                 | ✅ Unit         |
-| FR-001         | AC-4: unknown type → SourceError "unknown source type"            | TC-002 — `normalizeSource › "rejects malformed input"`                                                                 | ✅ Unit         |
-| FR-002         | AC-1: `owner/repo` → GitHub https URL                             | TC-003 — `"toGitUrl expands shorthand and passes through URLs"`                                                        | ✅ Unit         |
-| FR-002         | AC-2: `owner/repo.git` strips trailing `.git`                     | TC-003 — `"toGitUrl expands shorthand and passes through URLs"`                                                        | ✅ Unit         |
-| FR-002         | AC-3: full `https://` URL passes through                          | TC-003 — `"toGitUrl expands shorthand and passes through URLs"`                                                        | ✅ Unit         |
-| FR-002         | AC-4: `git@…` scp-style URL passes through                        | TC-003 — `"toGitUrl expands shorthand and passes through URLs"`                                                        | ✅ Unit         |
-| FR-002         | AC-5: surrounding whitespace is trimmed                           | TC-003 — `"toGitUrl expands shorthand and passes through URLs"` (padded-input assertion)                               | ✅ Unit         |
-| FR-003         | AC-1: valid manifest with name round-trips                        | TC-004 — `validateMarketplaceManifest › "accepts a valid manifest (with and without a name)"`                          | ✅ Unit         |
-| FR-003         | AC-2: missing name → `name === undefined`                         | TC-004 — `validateMarketplaceManifest › "accepts a valid manifest (with and without a name)"`                          | ✅ Unit         |
-| FR-003         | AC-3: null / non-object manifest → ManifestError                  | TC-005 — `validateMarketplaceManifest › "rejects malformed manifests and entries"`                                     | ✅ Unit         |
-| FR-003         | AC-4: bad schemaVersion / non-array entries → ManifestError       | TC-005 — `validateMarketplaceManifest › "rejects malformed manifests and entries"`                                     | ✅ Unit         |
-| FR-003         | AC-5: null entry / missing entry name → ManifestError             | TC-005 — `validateMarketplaceManifest › "rejects malformed manifests and entries"`                                     | ✅ Unit         |
-| FR-003         | AC-6: invalid entry source → SourceError                          | TC-005 — `validateMarketplaceManifest › "rejects malformed manifests and entries"`                                     | ✅ Unit         |
-| FR-004         | AC-1: path source returns the dir                                 | TC-006 — `resolveSource › "path source returns the dir; missing path throws"`                                          | ✅ Unit         |
-| FR-004         | AC-2: missing path → SourceError                                  | TC-006 — `resolveSource › "path source returns the dir; missing path throws"`                                          | ✅ Unit         |
-| FR-004         | AC-3: url / npm → UnsupportedSourceError                          | TC-007 — `resolveSource › "url and npm sources are not yet supported"`                                                 | ✅ Unit         |
-| FR-004         | AC-4: git-subdir sparse-checkout at tag → dir/sha/ref             | TC-008 — `resolveSource › "git-subdir sparse-checks out only the subdir at a tag"`                                     | ✅ Unit (git)   |
-| FR-004         | AC-5: whole-repo HEAD when unpinned; re-fetch existing cache      | TC-009 — `resolveSource › "whole-repo git resolves to HEAD when unpinned, and re-fetches an existing cache"`           | ✅ Unit (git)   |
-| FR-004         | AC-6: sha pin checks out the exact commit                         | TC-010 — `resolveSource › "sha pin checks out the exact commit"`                                                       | ✅ Unit (git)   |
-| FR-004         | AC-7: github + injected runner needs no real git                  | TC-011 — `resolveSource › "github source + injected runner needs no real git"`                                         | ✅ Unit (fake)  |
-| FR-004         | CON-1: git is the sole side effect                                | TC-011 — `resolveSource › "github source + injected runner needs no real git"`                                         | ✅ Unit (fake)  |
-| FR-004         | CON-2: blobless + sparse (subdir only)                            | TC-008 — `resolveSource › "git-subdir sparse-checks out only the subdir at a tag"`                                     | ✅ Unit (git)   |
-| FR-005         | AC-1: missing / shape-invalid (`{}`) registry read as empty       | TC-012 — `registry › "missing and malformed files read as empty"`                                                      | ✅ Unit         |
-| FR-005         | AC-2: atomic write + nested-dir creation round-trips              | TC-013 — `registry › "write is atomic and round-trips; upsert replaces by name"`                                       | ✅ Unit         |
-| FR-005         | AC-3: upsert replaces by name (count stays 1)                     | TC-013 — `registry › "write is atomic and round-trips; upsert replaces by name"`                                       | ✅ Unit         |
-| FR-006         | AC-1: named git-subdir entry materializes + records               | TC-014 — `installEntry › "materializes a named git-subdir entry and records it"`                                       | ✅ Unit (git)   |
-| FR-006         | AC-2: name derived via readName when absent                       | TC-015 — `installEntry › "derives the name via readName when the entry has none"`                                      | ✅ Unit (git)   |
-| FR-006         | AC-3: entry.path against a whole-repo source                      | TC-016 — `installEntry › "honors entry.path against a whole-repo source"`                                              | ✅ Unit (git)   |
-| FR-006         | AC-4: symlink mode; re-install replaces                           | TC-017 — `installEntry › "symlink mode links instead of copying, and re-install replaces"`                             | ✅ Unit (git)   |
-| FR-007         | AC-1: lazy installs enabled, skips disabled                       | TC-018 — `reconcile › "lazy installs the enabled set, skips disabled, and is idempotent with zero git on the 2nd run"` | ✅ Unit (git)   |
-| FR-007         | AC-2: 2nd lazy reconcile → unchanged, zero git                    | TC-018 — `reconcile › "lazy installs the enabled set, skips disabled, and is idempotent with zero git on the 2nd run"` | ✅ Unit (git)   |
-| FR-007         | AC-3: sync unchanged on stable ref; updated on moved pin          | TC-019 — `reconcile › "sync re-resolves: unchanged on a stable ref, updated on a moved pin"`                           | ✅ Unit (git)   |
-| FR-007         | AC-4: lazy re-materializes when target dir is gone                | TC-020 — `reconcile › "lazy re-materializes when the target dir is gone"`                                              | ✅ Unit (git)   |
-| FR-007         | AC-5: lazy sha pin → unchanged when matches, updated when differs | TC-021 — `reconcile › "lazy honors a sha pin: unchanged when it matches, updated when it differs"`                     | ✅ Unit (git)   |
+| Functional Req | Acceptance Criteria                                                 | Test Case · Case String                                                                                                | Coverage Status |
+| -------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | --------------- |
+| FR-001         | AC-1: all six valid source shapes accepted                          | TC-001 — `normalizeSource › "accepts every valid shape"`                                                               | ✅ Unit         |
+| FR-001         | AC-2: null / no-`type` → SourceError                                | TC-002 — `normalizeSource › "rejects malformed input"`                                                                 | ✅ Unit         |
+| FR-001         | AC-3: missing required field → SourceError naming the field         | TC-002 — `normalizeSource › "rejects malformed input"`                                                                 | ✅ Unit         |
+| FR-001         | AC-4: unknown type → SourceError "unknown source type"              | TC-002 — `normalizeSource › "rejects malformed input"`                                                                 | ✅ Unit         |
+| FR-002         | AC-1: `owner/repo` → GitHub https URL                               | TC-003 — `"toGitUrl expands shorthand and passes through URLs"`                                                        | ✅ Unit         |
+| FR-002         | AC-2: `owner/repo.git` strips trailing `.git`                       | TC-003 — `"toGitUrl expands shorthand and passes through URLs"`                                                        | ✅ Unit         |
+| FR-002         | AC-3: full `https://` URL passes through                            | TC-003 — `"toGitUrl expands shorthand and passes through URLs"`                                                        | ✅ Unit         |
+| FR-002         | AC-4: `git@…` scp-style URL passes through                          | TC-003 — `"toGitUrl expands shorthand and passes through URLs"`                                                        | ✅ Unit         |
+| FR-002         | AC-5: surrounding whitespace is trimmed                             | TC-003 — `"toGitUrl expands shorthand and passes through URLs"` (padded-input assertion)                               | ✅ Unit         |
+| FR-003         | AC-1: valid manifest with name round-trips                          | TC-004 — `validateMarketplaceManifest › "accepts a valid manifest (with and without a name)"`                          | ✅ Unit         |
+| FR-003         | AC-2: missing name → `name === undefined`                           | TC-004 — `validateMarketplaceManifest › "accepts a valid manifest (with and without a name)"`                          | ✅ Unit         |
+| FR-003         | AC-3: null / non-object manifest → ManifestError                    | TC-005 — `validateMarketplaceManifest › "rejects malformed manifests and entries"`                                     | ✅ Unit         |
+| FR-003         | AC-4: bad schemaVersion / non-array entries → ManifestError         | TC-005 — `validateMarketplaceManifest › "rejects malformed manifests and entries"`                                     | ✅ Unit         |
+| FR-003         | AC-5: null entry / missing entry name → ManifestError               | TC-005 — `validateMarketplaceManifest › "rejects malformed manifests and entries"`                                     | ✅ Unit         |
+| FR-003         | AC-6: invalid entry source → SourceError                            | TC-005 — `validateMarketplaceManifest › "rejects malformed manifests and entries"`                                     | ✅ Unit         |
+| FR-004         | AC-1: path source returns the dir                                   | TC-006 — `resolveSource › "path source returns the dir; missing path throws"`                                          | ✅ Unit         |
+| FR-004         | AC-2: missing path → SourceError                                    | TC-006 — `resolveSource › "path source returns the dir; missing path throws"`                                          | ✅ Unit         |
+| FR-004         | AC-3: url / npm → UnsupportedSourceError                            | TC-007 — `resolveSource › "url and npm sources are not yet supported"`                                                 | ✅ Unit         |
+| FR-004         | AC-4: git-subdir sparse-checkout at tag → dir/sha/ref               | TC-008 — `resolveSource › "git-subdir sparse-checks out only the subdir at a tag"`                                     | ✅ Unit (git)   |
+| FR-004         | AC-5: whole-repo HEAD when unpinned; re-fetch existing cache        | TC-009 — `resolveSource › "whole-repo git resolves to HEAD when unpinned, and re-fetches an existing cache"`           | ✅ Unit (git)   |
+| FR-004         | AC-6: sha pin checks out the exact commit                           | TC-010 — `resolveSource › "sha pin checks out the exact commit"`                                                       | ✅ Unit (git)   |
+| FR-004         | AC-7: github + injected runner needs no real git                    | TC-011 — `resolveSource › "github source + injected runner needs no real git"`                                         | ✅ Unit (fake)  |
+| FR-004         | CON-1: git is the sole side effect                                  | TC-011 — `resolveSource › "github source + injected runner needs no real git"`                                         | ✅ Unit (fake)  |
+| FR-004         | CON-2: blobless + sparse (subdir only)                              | TC-008 — `resolveSource › "git-subdir sparse-checks out only the subdir at a tag"`                                     | ✅ Unit (git)   |
+| FR-004         | AC-8 / CON-3: option-like git argv field rejected (injection guard) | TC-022 — `normalizeSource › "rejects option-like git argv fields (injection guard)"`                                   | ✅ Unit         |
+| FR-005         | AC-1: missing / shape-invalid (`{}`) registry read as empty         | TC-012 — `registry › "missing and malformed files read as empty"`                                                      | ✅ Unit         |
+| FR-005         | AC-2: atomic write + nested-dir creation round-trips                | TC-013 — `registry › "write is atomic and round-trips; upsert replaces by name"`                                       | ✅ Unit         |
+| FR-005         | AC-3: upsert replaces by name (count stays 1)                       | TC-013 — `registry › "write is atomic and round-trips; upsert replaces by name"`                                       | ✅ Unit         |
+| FR-006         | AC-1: named git-subdir entry materializes + records                 | TC-014 — `installEntry › "materializes a named git-subdir entry and records it"`                                       | ✅ Unit (git)   |
+| FR-006         | AC-2: name derived via readName when absent                         | TC-015 — `installEntry › "derives the name via readName when the entry has none"`                                      | ✅ Unit (git)   |
+| FR-006         | AC-3: entry.path against a whole-repo source                        | TC-016 — `installEntry › "honors entry.path against a whole-repo source"`                                              | ✅ Unit (git)   |
+| FR-006         | AC-4: symlink mode; re-install replaces                             | TC-017 — `installEntry › "symlink mode links instead of copying, and re-install replaces"`                             | ✅ Unit (git)   |
+| FR-007         | AC-1: lazy installs enabled, skips disabled                         | TC-018 — `reconcile › "lazy installs the enabled set, skips disabled, and is idempotent with zero git on the 2nd run"` | ✅ Unit (git)   |
+| FR-007         | AC-2: 2nd lazy reconcile → unchanged, zero git                      | TC-018 — `reconcile › "lazy installs the enabled set, skips disabled, and is idempotent with zero git on the 2nd run"` | ✅ Unit (git)   |
+| FR-007         | AC-3: sync unchanged on stable ref; updated on moved pin            | TC-019 — `reconcile › "sync re-resolves: unchanged on a stable ref, updated on a moved pin"`                           | ✅ Unit (git)   |
+| FR-007         | AC-4: lazy re-materializes when target dir is gone                  | TC-020 — `reconcile › "lazy re-materializes when the target dir is gone"`                                              | ✅ Unit (git)   |
+| FR-007         | AC-5: lazy sha pin → unchanged when matches, updated when differs   | TC-021 — `reconcile › "lazy honors a sha pin: unchanged when it matches, updated when it differs"`                     | ✅ Unit (git)   |
 
 ---
 
@@ -150,28 +151,31 @@ partial clones work offline.
 | TC-019  | reconcile sync unchanged-stable / updated-moved                 | Unit (git)  | P0       | FR-007-AC-3, US-001-AC-3                        | ✅     |
 | TC-020  | reconcile lazy re-materializes vanished target                  | Unit (git)  | P1       | FR-007-AC-4                                     | ✅     |
 | TC-021  | reconcile lazy sha pin unchanged/updated                        | Unit (git)  | P0       | FR-007-AC-5                                     | ✅     |
+| TC-022  | normalizeSource rejects option-like git argv fields (`-x`)      | Unit        | P0       | FR-004-AC-8, -CON-3                             | ✅     |
 
 ---
 
 ## Constraint Boundary Tests
 
-| Constraint   | Boundary / Case             | Test Value                | Test Case | Expected                                   |
-| ------------ | --------------------------- | ------------------------- | --------- | ------------------------------------------ |
-| FR-004-CON-1 | git is the sole side effect | injected fake `GitRunner` | TC-011    | resolves with no real git; argv[0]=`clone` |
-| FR-004-CON-2 | blobless + sparse           | `git-subdir` at `v0.2.0`  | TC-008    | only the subdir present; tag sha resolved  |
+| Constraint   | Boundary / Case             | Test Value                                                      | Test Case | Expected                                                     |
+| ------------ | --------------------------- | --------------------------------------------------------------- | --------- | ------------------------------------------------------------ |
+| FR-004-CON-1 | git is the sole side effect | injected fake `GitRunner`                                       | TC-011    | resolves with no real git; argv[0]=`clone`                   |
+| FR-004-CON-2 | blobless + sparse           | `git-subdir` at `v0.2.0`                                        | TC-008    | only the subdir present; tag sha resolved                    |
+| FR-004-CON-3 | option-like git argv field  | `repo`/`url`/`ref`/`sha` = `-x` (e.g. `ref: "--upload-pack=…"`) | TC-022    | `SourceError` "must not begin with `-`"; no `git` invocation |
 
 ---
 
 ## Error-Path Coverage
 
-| Error                        | Trigger                                            | Test Case | Status |
-| ---------------------------- | -------------------------------------------------- | --------- | ------ |
-| `SourceError`                | null / no-`type` / missing field / unknown type    | TC-002    | ✅     |
-| `SourceError`                | `path` source dir does not exist                   | TC-006    | ✅     |
-| `UnsupportedSourceError`     | `url` / `npm` passed to `resolveSource`            | TC-007    | ✅     |
-| `ManifestError`              | non-object / bad schemaVersion / non-array entries | TC-005    | ✅     |
-| `ManifestError`              | null entry / entry missing a non-empty `name`      | TC-005    | ✅     |
-| `SourceError` (via manifest) | entry with an invalid `source.type`                | TC-005    | ✅     |
+| Error                        | Trigger                                                           | Test Case | Status |
+| ---------------------------- | ----------------------------------------------------------------- | --------- | ------ |
+| `SourceError`                | null / no-`type` / missing field / unknown type                   | TC-002    | ✅     |
+| `SourceError`                | `path` source dir does not exist                                  | TC-006    | ✅     |
+| `SourceError`                | option-like (`-`) `repo`/`url`/`ref`/`sha` (argv injection guard) | TC-022    | ✅     |
+| `UnsupportedSourceError`     | `url` / `npm` passed to `resolveSource`                           | TC-007    | ✅     |
+| `ManifestError`              | non-object / bad schemaVersion / non-array entries                | TC-005    | ✅     |
+| `ManifestError`              | null entry / entry missing a non-empty `name`                     | TC-005    | ✅     |
+| `SourceError` (via manifest) | entry with an invalid `source.type`                               | TC-005    | ✅     |
 
 ---
 
@@ -189,16 +193,17 @@ partial clones work offline.
 
 ## Coverage Summary
 
-- **Acceptance Criteria → Test Case coverage: 36 of 36 functional ACs (100%) map to
+- **Acceptance Criteria → Test Case coverage: 37 of 37 functional ACs (100%) map to
   an executed Test Case.** All ACs of FR-001…FR-007 (incl. FR-002-AC-5 whitespace
-  trimming via the padded-input assertion in TC-003), both FR-004 constraints, and
-  all 10 user-story ACs map to a real test in `tests/index.test.ts`. NFR-001…NFR-004
-  are covered by the coverage gate, the zero-git assertion, inspection, and analysis.
-- The 21 TCs are **1:1** with the tests in `tests/index.test.ts`. All pass under
+  trimming via the padded-input assertion in TC-003, and FR-004-AC-8 the argv
+  injection guard via TC-022), all three FR-004 constraints, and all 10 user-story
+  ACs map to a real test in `tests/index.test.ts`. NFR-001…NFR-004 are covered by
+  the coverage gate, the zero-git assertion, inspection, and analysis.
+- The 22 TCs are **1:1** with the tests in `tests/index.test.ts`. All pass under
   `make test` at the 100% coverage gate.
 - All six test-matrix rules are satisfied: every AC has a TC (Rule 1); the
   copy/symlink materialize options are both exercised (Rule 2, TC-014/TC-017); the
-  two FR-004 constraints are boundary-tested (Rule 3); every documented error is
+  three FR-004 constraints are boundary-tested (Rule 3); every documented error is
   triggered (Rule 4); reconcile's installed/unchanged/updated/skipped outcomes are
   all reached (Rule 5); and the edge cases above are explicit (Rule 6).
 

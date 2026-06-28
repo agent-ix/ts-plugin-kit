@@ -152,6 +152,48 @@ describe("normalizeSource", () => {
       normalizeSource({ type: "bogus" } as unknown as Source),
     ).toThrow(/unknown source type/);
   });
+
+  // FR-004-CON-3..6: source fields that flow into the `git` argv must not be
+  // interpretable as a CLI flag (leading `-`), or git treats them as an option
+  // (e.g. `ref` of `--upload-pack=<cmd>`) — a second-order command-line
+  // injection. `normalizeSource` rejects them before any git invocation.
+  test("rejects option-like git argv fields (injection guard)", () => {
+    // repo / url reach `git clone` / `git fetch`
+    expect(() =>
+      normalizeSource({ type: "github", repo: "-x" } as Source),
+    ).toThrow(/must not begin with "-"/);
+    expect(() => normalizeSource({ type: "git", url: "-x" } as Source)).toThrow(
+      /must not begin with "-"/,
+    );
+    expect(() =>
+      normalizeSource({ type: "git-subdir", url: "-x", path: "p" } as Source),
+    ).toThrow(/must not begin with "-"/);
+    expect(() => normalizeSource({ type: "url", url: "-x" } as Source)).toThrow(
+      /must not begin with "-"/,
+    );
+    // ref / sha reach `git checkout --detach <wanted>`
+    expect(() =>
+      normalizeSource({
+        type: "github",
+        repo: "a/b",
+        ref: "--upload-pack=touch /tmp/pwned",
+      } as Source),
+    ).toThrow(SourceError);
+    expect(() =>
+      normalizeSource({ type: "git", url: "u", sha: "-x" } as Source),
+    ).toThrow(SourceError);
+    expect(() =>
+      normalizeSource({
+        type: "git-subdir",
+        url: "u",
+        path: "p",
+        ref: "-r",
+      } as Source),
+    ).toThrow(SourceError);
+    expect(() =>
+      normalizeSource({ type: "url", url: "u", sha: "-s" } as Source),
+    ).toThrow(SourceError);
+  });
 });
 
 test("toGitUrl expands shorthand and passes through URLs", () => {

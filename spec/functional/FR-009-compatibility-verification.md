@@ -43,6 +43,11 @@ capability-attachment steps are specified under Behavior below.
   candidate's manifest via
   `https://raw.githubusercontent.com/{owner}/{repo}/HEAD/{manifestPath}`, through
   the same injectable `HttpFetcher`.
+- Before building a manifest URL, the library SHALL reject a registry-supplied
+  `name`/`fullName` whose path segments contain `..` or any control character,
+  dropping that candidate without issuing a fetch, so a hostile registry entry
+  cannot traverse within the trusted CDN authority. (`manifestPath` is host-supplied
+  and therefore trusted.)
 - When a manifest fetch returns `404`, the library SHALL drop the candidate as
   incompatible (no manifest at the declared path) without recording an error.
 - If a manifest fetch rejects or returns a non-OK status other than `404`, then the
@@ -71,6 +76,13 @@ capability-attachment steps are specified under Behavior below.
 | FR-009-AC-6 | A manifest fetch that rejects or returns a non-`404` non-OK status drops the candidate as unverified and records a transient `SearchBackendError`.                              | Test (TC-048) |
 | FR-009-AC-7 | A `verify` callback that throws drops only that candidate; no error escapes `searchPlugins` and other candidates are unaffected.                                                | Test (TC-049) |
 | FR-009-AC-8 | No more than six manifest fetches are in flight simultaneously for a candidate set larger than six.                                                                             | Test (TC-050) |
+| FR-009-AC-9 | A candidate whose registry-supplied name contains a `..` path segment or a control character is dropped before any manifest fetch is issued.                                    | Test (TC-057) |
+
+## Constraints
+
+| ID           | Constraint                                                                                                                                                         | Type     | Validation    |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------------- |
+| FR-009-CON-1 | The library SHALL NOT interpolate a registry-supplied name containing a `..` path segment or a control character into a manifest URL; such a candidate is dropped. | Security | Test (TC-057) |
 
 ## Dependencies
 

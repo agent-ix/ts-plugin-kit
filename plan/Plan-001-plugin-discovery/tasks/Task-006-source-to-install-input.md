@@ -2,7 +2,7 @@
 id: Task-006
 title: "FR-012 sourceToInstallInput (canonical source string)"
 type: Task
-status: todo
+status: done
 track: C
 priority: P1
 relationships:

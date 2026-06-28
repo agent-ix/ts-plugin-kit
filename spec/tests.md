@@ -140,6 +140,7 @@ partial clones work offline.
 | FR-009         | AC-6: transient (non-404) fetch fail → drop + transient error          | TC-048 — `searchPlugins(verify) › "drops on a transient fetch failure and records a transient error"`                  | 🚧 Planned (fake) |
 | FR-009         | AC-7: verify throws → drop only that candidate, no escape              | TC-049 — `searchPlugins(verify) › "isolates a throwing verify to its candidate"`                                       | 🚧 Planned (fake) |
 | FR-009         | AC-8: ≤6 manifest fetches in flight at once                            | TC-050 — `searchPlugins(verify) › "caps manifest-fetch concurrency at six"`                                            | 🚧 Planned (fake) |
+| FR-009         | AC-9 / CON-1: traversal/control-char name dropped, no fetch            | TC-057 — `searchPlugins(verify) › "rejects path-traversal / control-char candidate names before fetching a manifest"`  | ✅ Unit (fake)    |
 | FR-010         | AC-1: TTL cache returns value before expiry, undefined after           | TC-032 — `createTtlCache › "returns before expiry, evicts after the clock advances"`                                   | 🚧 Planned (fake) |
 | FR-010         | AC-2: `max`-bounded cache evicts oldest                                | TC-033 — `createTtlCache › "evicts the oldest entry past max"`                                                         | 🚧 Planned (fake) |
 | FR-010         | AC-3: cache hit within TTL issues no further fetch                     | TC-034 — `createPluginSearch › "serves an identical search from cache with no fetch"`                                  | 🚧 Planned (fake) |
@@ -147,11 +148,15 @@ partial clones work offline.
 | FR-010         | AC-5: function-valued githubToken resolved per call                    | TC-036 — `createPluginSearch › "resolves a late-bound github token per call"`                                          | 🚧 Planned (fake) |
 | FR-010         | AC-6: error/rate-limited response is not cached                        | TC-051 — `createPluginSearch › "does not cache a response carrying errors"`                                            | 🚧 Planned (fake) |
 | FR-010         | AC-7: verifier/token-id discriminate cache entries                     | TC-052 — `createPluginSearch › "keys verifier-presence and token-id distinctly"`                                       | 🚧 Planned (fake) |
+| FR-010         | AC-8: distinct non-empty tokens → distinct cache entries               | TC-055 — `createPluginSearch › "keys distinct non-empty tokens to distinct cache entries"`                             | ✅ Unit (fake)    |
+| FR-010         | AC-9: cache bounded by default cacheMax (256) + explicit override      | TC-056, TC-060 — `createPluginSearch › "bounds the cache by a default max…" / "honors an explicit cacheMax override"`  | ✅ Unit (fake)    |
+| FR-010         | AC-10: cache hit returns a distinct (cloned) response                  | TC-059 — `createPluginSearch › "returns a distinct response object on a cache hit"`                                    | ✅ Unit (fake)    |
 | FR-011         | AC-1: 200 headers populate rate.github                                 | TC-037 — `searchPlugins › "reads github rate-limit headers into rate.github"`                                          | 🚧 Planned (fake) |
 | FR-011         | AC-2: 403 remaining:0 → rateLimited error, no throw                    | TC-038 — `searchPlugins › "surfaces an exhausted github window as a rateLimited error"`                                | 🚧 Planned (fake) |
 | FR-011         | AC-3: exhausted window short-circuits next github request              | TC-039 — `createPluginSearch › "skips github while the window is exhausted"`                                           | 🚧 Planned (fake) |
 | FR-011         | AC-4: after resetAt passes, github request resumes                     | TC-040 — `createPluginSearch › "resumes github once the clock passes resetAt"`                                         | 🚧 Planned (fake) |
 | FR-011         | AC-5: first call (no prior snapshot) issues github; lastRate empty     | TC-053 — `createPluginSearch › "does not short-circuit on the first call"`                                             | 🚧 Planned (fake) |
+| FR-011         | AC-6: non-finite rate header → no rate info (undefined)                | TC-058 — `searchPlugins › "treats non-finite rate-limit headers as no rate info"`                                      | ✅ Unit (fake)    |
 | FR-012         | AC-1: npm→package, github→owner/repo                                   | TC-041 — `sourceToInstallInput › "renders npm and github sources"`                                                     | 🚧 Planned        |
 | FR-012         | AC-2: git/url→url, path→path                                           | TC-042 — `sourceToInstallInput › "renders git/url and path sources"`                                                   | 🚧 Planned        |
 
@@ -227,6 +232,12 @@ partial clones work offline.
 | TC-052  | createPluginSearch keys verifier-presence + token-id            | Unit (fake) | P1       | FR-010-AC-7                                     | 🚧     |
 | TC-053  | createPluginSearch first call issues github (no short-circuit)  | Unit (fake) | P1       | FR-011-AC-5                                     | 🚧     |
 | TC-054  | searchPlugins never leaks github token                          | Unit (fake) | P0       | FR-008-CON-2                                    | 🚧     |
+| TC-055  | createPluginSearch keys distinct tokens to distinct entries     | Unit (fake) | P0       | FR-010-AC-8, FR-008-CON-2                       | ✅     |
+| TC-056  | createPluginSearch bounds cache by default max (256)            | Unit (fake) | P1       | FR-010-AC-9                                     | ✅     |
+| TC-057  | verify drops traversal/control-char name before fetch           | Unit (fake) | P0       | FR-009-AC-9, -CON-1                             | ✅     |
+| TC-058  | searchPlugins treats non-finite rate header as no rate info     | Unit (fake) | P1       | FR-011-AC-6                                     | ✅     |
+| TC-059  | createPluginSearch cache hit returns a distinct clone           | Unit (fake) | P1       | FR-010-AC-10                                    | ✅     |
+| TC-060  | createPluginSearch honors an explicit cacheMax override         | Unit (fake) | P1       | FR-010-AC-9                                     | ✅     |
 
 ---
 
@@ -238,6 +249,7 @@ partial clones work offline.
 | FR-004-CON-2       | blobless + sparse           | `git-subdir` at `v0.2.0`             | TC-008    | only the subdir present; tag sha resolved  |
 | FR-008-CON-1       | network via injectable seam | injected fake `HttpFetcher`          | TC-022    | results returned with no real network call |
 | FR-008-CON-2       | token never leaks           | `githubToken` set + error/cache path | TC-054    | token absent from key, error, and result   |
+| FR-009-CON-1       | name path-traversal / ctrl  | `name: "../evil"`, ctrl char         | TC-057    | candidate dropped; no manifest URL fetched |
 | FR-009 concurrency | verification fan-out        | 12 candidates, verifier set          | TC-050    | ≤ 6 concurrent manifest fetches            |
 | FR-008 limit       | clamp above max             | `limit: 9999`                        | TC-045    | npm `size`=250, github `per_page`=100      |
 

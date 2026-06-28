@@ -2,7 +2,7 @@
 id: Task-003
 title: "FR-009 host-driven compatibility verification"
 type: Task
-status: todo
+status: done
 track: A
 priority: P0
 relationships:

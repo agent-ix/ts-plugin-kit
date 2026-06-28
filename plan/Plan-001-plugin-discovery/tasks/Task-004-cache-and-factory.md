@@ -2,7 +2,7 @@
 id: Task-004
 title: "FR-010 TTL cache + createPluginSearch factory"
 type: Task
-status: todo
+status: done
 track: B
 priority: P0
 relationships:

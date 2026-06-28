@@ -47,6 +47,9 @@ own. The individual rules are specified under Behavior below.
 - The library SHALL parse the three rate-limit headers from a GitHub response
   (present on both 200 and 403) into `rate.github`, storing `resetAt` as the raw
   epoch-seconds integer.
+- Where any of the three rate-limit headers is absent or parses to a non-finite
+  number, the library SHALL treat the response as carrying no rate info and leave
+  `rate.github` undefined rather than surfacing a `NaN` field.
 - On the first search, when no prior `lastRate().github` snapshot exists, the
   library SHALL issue the GitHub request normally (no short-circuit).
 - When a GitHub response is `403` or `429` with `remaining === 0`, the library
@@ -69,6 +72,7 @@ own. The individual rules are specified under Behavior below.
 | FR-011-AC-3 | After a window is recorded exhausted, the next `search` skips the GitHub request while the injected clock is before `resetAt`.                                  | Test (TC-039) |
 | FR-011-AC-4 | Once the injected clock advances past `resetAt` (seconds), the next `search` issues the GitHub request again.                                                   | Test (TC-040) |
 | FR-011-AC-5 | On the first search with no prior rate snapshot, the GitHub request is issued (no short-circuit), and `lastRate()` is an empty object until a response is seen. | Test (TC-053) |
+| FR-011-AC-6 | A rate-limit header that is absent or parses to a non-finite number yields no rate info (`rate.github` undefined), not a `NaN`-valued `RateLimit`.              | Test (TC-058) |
 
 ## Dependencies
 

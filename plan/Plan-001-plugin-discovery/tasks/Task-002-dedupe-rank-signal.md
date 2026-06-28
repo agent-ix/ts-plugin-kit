@@ -2,7 +2,7 @@
 id: Task-002
 title: "FR-008 dedupe, total-order rank, signal propagation, token redaction"
 type: Task
-status: todo
+status: done
 track: A
 priority: P0
 relationships:

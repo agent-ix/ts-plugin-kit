@@ -7,6 +7,8 @@
  * {@link HttpFetcher} (default: the Node global `fetch`), so it adds no runtime
  * dependency and is fully offline-testable (NFR-005).
  */
+import { createHash } from "node:crypto";
+
 import { Source } from "./sources.js";
 
 // ── Injectable HTTP seam (a structural subset of the DOM `Response`) ─────────
@@ -116,6 +118,8 @@ const NPM_SIZE_MAX = 250;
 const GITHUB_PER_PAGE_MAX = 100;
 const VERIFY_CONCURRENCY = 6;
 const DEFAULT_SOURCES: SearchBackend[] = ["npm", "github"];
+/** Default upper bound on distinct cached searches held by a `PluginSearch`. */
+const DEFAULT_CACHE_MAX = 256;
 
 interface BackendOutcome {
   results: PluginSearchResult[];
@@ -333,11 +337,10 @@ function parseRate(res: HttpResponse): RateLimit | undefined {
   const remaining = res.headers.get("x-ratelimit-remaining");
   const reset = res.headers.get("x-ratelimit-reset");
   if (limit === null || remaining === null || reset === null) return undefined;
-  return {
-    limit: Number(limit),
-    remaining: Number(remaining),
-    resetAt: Number(reset),
-  };
+  const nums = [Number(limit), Number(remaining), Number(reset)];
+  // A non-finite parse (e.g. a malformed header) means "no rate info".
+  if (nums.some((n) => !Number.isFinite(n))) return undefined;
+  return { limit: nums[0], remaining: nums[1], resetAt: nums[2] };
 }
 
 // ── Dedupe + rank (FR-008) ──────────────────────────────────────────────────
@@ -418,13 +421,28 @@ async function verifyCandidates(
   return kept;
 }
 
+/**
+ * A registry-supplied name is unsafe to interpolate into a manifest URL when it
+ * carries a control character or a path segment containing `..`: even though the
+ * authority is fixed (no cross-host SSRF), `..` can traverse within the trusted
+ * CDN. (`manifestPath` is host-supplied and therefore trusted.)
+ */
+function unsafeManifestName(name: string): boolean {
+  return (
+    /[\u0000-\u001f\u007f]/.test(name) ||
+    name.split("/").some((seg) => seg.includes(".."))
+  );
+}
+
 function manifestUrl(
   candidate: PluginSearchResult,
   manifestPath: string,
-): string {
+): string | null {
+  const name = candidate.origin === "npm" ? candidate.name : candidate.fullName;
+  if (unsafeManifestName(name)) return null;
   return candidate.origin === "npm"
-    ? `https://unpkg.com/${candidate.name}/${manifestPath}`
-    : `https://raw.githubusercontent.com/${candidate.fullName}/HEAD/${manifestPath}`;
+    ? `https://unpkg.com/${name}/${manifestPath}`
+    : `https://raw.githubusercontent.com/${name}/HEAD/${manifestPath}`;
 }
 
 async function verifyOne(
@@ -435,6 +453,7 @@ async function verifyOne(
   errors: SearchBackendError[],
 ): Promise<PluginSearchResult | null> {
   const url = manifestUrl(candidate, verifier.manifestPath);
+  if (url === null) return null; // unsafe registry-supplied name → drop candidate
   let res: HttpResponse;
   try {
     res = await http(url, { signal: opts.signal });
@@ -540,6 +559,26 @@ export interface PluginSearch {
   lastRate(): Partial<Record<SearchBackend, RateLimit>>;
 }
 
+/**
+ * A stable, non-secret discriminator of a resolved token for the cache key. Two
+ * distinct tokens map to distinct ids (no cross-token cache hit), while the raw
+ * token value never enters the key (FR-008-CON-2): an absent token is `"anon"`,
+ * any present token is the first 8 hex of its SHA-256 digest.
+ */
+function tokenId(token: string | undefined): string {
+  if (!token) return "anon";
+  return createHash("sha256").update(token).digest("hex").slice(0, 8);
+}
+
+/** A one-level clone so a cache hit never shares mutable state with the caller. */
+function cloneResponse(r: SearchResponse): SearchResponse {
+  return {
+    results: [...r.results],
+    rate: { ...r.rate },
+    errors: [...r.errors],
+  };
+}
+
 export function createPluginSearch(deps: PluginSearchDeps = {}): PluginSearch {
   const clock = deps.clock ?? systemClock;
   const http = deps.http ?? defaultHttpFetcher;
@@ -547,7 +586,7 @@ export function createPluginSearch(deps: PluginSearchDeps = {}): PluginSearch {
   const cache = createTtlCache<SearchResponse>({
     ttlMs,
     clock,
-    max: deps.cacheMax,
+    max: deps.cacheMax ?? DEFAULT_CACHE_MAX,
   });
   let rate: Partial<Record<SearchBackend, RateLimit>> = {};
 
@@ -565,7 +604,7 @@ export function createPluginSearch(deps: PluginSearchDeps = {}): PluginSearch {
       sources,
       opts.limit ?? 20,
       (opts.verifier ?? deps.verifier) ? "v" : "",
-      token ? "auth" : "anon",
+      tokenId(token),
     ].join("|");
   }
 
@@ -574,7 +613,7 @@ export function createPluginSearch(deps: PluginSearchDeps = {}): PluginSearch {
       const token = resolveToken();
       const key = cacheKey(opts, token);
       const hit = cache.get(key);
-      if (hit) return hit;
+      if (hit) return cloneResponse(hit);
 
       const requested = opts.sources ?? DEFAULT_SOURCES;
       const gh = rate.github;
@@ -608,7 +647,9 @@ export function createPluginSearch(deps: PluginSearchDeps = {}): PluginSearch {
       }
 
       rate = { ...rate, ...response.rate };
-      if (response.errors.length === 0) cache.set(key, response);
+      // Cache a clone so a caller mutating the returned response cannot poison
+      // the cached entry, and hand back the fresh response on this call.
+      if (response.errors.length === 0) cache.set(key, cloneResponse(response));
       return response;
     },
     invalidate() {

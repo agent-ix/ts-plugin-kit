@@ -2,7 +2,7 @@
 id: Task-007
 title: "Re-export discovery surface + quality gates"
 type: Task
-status: todo
+status: done
 track: S
 priority: P0
 relationships:

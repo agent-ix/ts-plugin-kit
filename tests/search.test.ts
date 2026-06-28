@@ -598,6 +598,33 @@ describe("searchPlugins — verification (FR-009)", () => {
     expect(r.results.map((x) => x.name)).toEqual(["good"]);
   });
 
+  it("rejects path-traversal / control-char candidate names before fetching a manifest (TC-057)", async () => {
+    const fetched: string[] = [];
+    const http: HttpFetcher = async (url) => {
+      if (url.includes("unpkg.com")) {
+        fetched.push(url);
+        return res("m");
+      }
+      return url.includes("/-/v1/search")
+        ? res(
+            npmBody(
+              npmPkg({ name: "../evil", links: {} }),
+              npmPkg({ name: `ev${String.fromCharCode(1)}il`, links: {} }),
+              npmPkg({ name: "good", links: {} }),
+            ),
+          )
+        : res(ghBody());
+    };
+    const r = await searchPlugins({
+      tag: "t",
+      http,
+      sources: ["npm"],
+      verifier: okVerifier(),
+    });
+    expect(r.results.map((x) => x.name)).toEqual(["good"]);
+    expect(fetched).toEqual(["https://unpkg.com/good/manifest.yaml"]);
+  });
+
   it("caps manifest-fetch concurrency at six (TC-050)", async () => {
     let inFlight = 0;
     let maxInFlight = 0;
@@ -810,6 +837,74 @@ describe("createPluginSearch (FR-010)", () => {
     expect(urls.some((u) => u.startsWith("https://deps-npm"))).toBe(true);
     expect(urls.some((u) => u.startsWith("https://deps-gh"))).toBe(true);
   });
+
+  it("keys distinct non-empty tokens to distinct cache entries (TC-055)", async () => {
+    let token: string | undefined = "tokA";
+    let calls = 0;
+    const http: HttpFetcher = async (url, init) => {
+      calls++;
+      return okHttp(url, init);
+    };
+    const ps = createPluginSearch({
+      http,
+      clock: { now: () => 0 },
+      githubToken: () => token,
+    });
+    await ps.search({ tag: "t" }); // caches under tokA's token-id
+    const afterA = calls;
+    token = "tokB";
+    await ps.search({ tag: "t" }); // distinct token-id → must NOT cross-hit tokA
+    expect(calls).toBeGreaterThan(afterA);
+    const afterB = calls;
+    await ps.search({ tag: "t" }); // tokB now cached → no fetch
+    expect(calls).toBe(afterB);
+    token = "tokA";
+    await ps.search({ tag: "t" }); // tokA's entry still distinct + live → no fetch
+    expect(calls).toBe(afterB);
+  });
+
+  it("bounds the cache by a default max, evicting the oldest entry (TC-056)", async () => {
+    let calls = 0;
+    const http: HttpFetcher = async (url, init) => {
+      calls++;
+      return okHttp(url, init);
+    };
+    const ps = createPluginSearch({ http, clock: { now: () => 0 } });
+    for (let i = 0; i < 257; i++) await ps.search({ tag: `t${i}` });
+    const afterFill = calls;
+    await ps.search({ tag: "t0" }); // oldest was evicted past the default bound
+    expect(calls).toBeGreaterThan(afterFill);
+    const afterEvicted = calls;
+    await ps.search({ tag: "t256" }); // a recent entry is still cached
+    expect(calls).toBe(afterEvicted);
+  });
+
+  it("honors an explicit cacheMax override (TC-060)", async () => {
+    let calls = 0;
+    const http: HttpFetcher = async (url, init) => {
+      calls++;
+      return okHttp(url, init);
+    };
+    const ps = createPluginSearch({
+      http,
+      clock: { now: () => 0 },
+      cacheMax: 1,
+    });
+    await ps.search({ tag: "a" });
+    await ps.search({ tag: "b" }); // evicts "a" past the bound of 1
+    const before = calls;
+    await ps.search({ tag: "a" }); // "a" was evicted → re-fetch
+    expect(calls).toBeGreaterThan(before);
+  });
+
+  it("returns a distinct response object on a cache hit (TC-059)", async () => {
+    const ps = createPluginSearch({ http: okHttp, clock: { now: () => 0 } });
+    const first = await ps.search({ tag: "t" });
+    const hit = await ps.search({ tag: "t" });
+    expect(hit).not.toBe(first);
+    expect(hit.results).not.toBe(first.results);
+    expect(hit).toEqual(first);
+  });
 });
 
 // ── FR-011: GitHub rate limit ────────────────────────────────────────────────
@@ -822,6 +917,15 @@ describe("rate-limit surfacing + short-circuit (FR-011)", () => {
         : res(npmBody());
     const r = await searchPlugins({ tag: "t", http, sources: ["github"] });
     expect(r.rate.github).toEqual({ limit: 30, remaining: 29, resetAt: 12345 });
+  });
+
+  it("treats non-finite rate-limit headers as no rate info (TC-058)", async () => {
+    const http: HttpFetcher = async (url) =>
+      url.includes("/search/repositories")
+        ? res(ghBody(), { headers: RL("oops", "29", "12345") })
+        : res(npmBody());
+    const r = await searchPlugins({ tag: "t", http, sources: ["github"] });
+    expect(r.rate.github).toBeUndefined();
   });
 
   it("surfaces an exhausted github window as a rateLimited error (TC-038)", async () => {

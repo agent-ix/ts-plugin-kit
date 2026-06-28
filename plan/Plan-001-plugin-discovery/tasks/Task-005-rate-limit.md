@@ -2,7 +2,7 @@
 id: Task-005
 title: "FR-011 GitHub rate-limit surfacing + short-circuit"
 type: Task
-status: todo
+status: done
 track: B
 priority: P0
 relationships:

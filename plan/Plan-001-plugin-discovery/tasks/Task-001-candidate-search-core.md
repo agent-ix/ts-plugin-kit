@@ -2,7 +2,7 @@
 id: Task-001
 title: "FR-008 candidate search core (search.ts scaffold + HttpFetcher + backends)"
 type: Task
-status: todo
+status: done
 track: A
 priority: P0
 relationships:

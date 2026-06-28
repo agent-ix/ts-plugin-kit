@@ -21,7 +21,7 @@ today under `make test` (vitest) at the 100% coverage gate (NFR-002).
 
 > **Concurrent-PR note.** TC-022…TC-054 are a shared TC-ID block also claimed by
 > the concurrent `feat/plugin-discovery` PR. This (`feat/npm-source-resolution`)
-> PR lands first and uses TC-022…TC-026 for npm source resolution; the two
+> PR lands first and uses TC-022…TC-028 for npm source resolution; the two
 > matrices will be **reconciled at the second merge** so the IDs do not collide.
 
 Tests fall into the following types:
@@ -110,6 +110,9 @@ partial clones work offline.
 | FR-004         | AC-10: defaultNpmFetcher local-pack offline (npm pack + tar)      | TC-024 — `resolveSource › "defaultNpmFetcher packs and extracts a local package offline"`                                                                 | ✅ Unit (npm)      |
 | FR-004         | AC-11: npmPackArgs builds pinned/unpinned + registry argv         | TC-025 — `resolveSource › "npmPackArgs builds pinned, unpinned, and registry argv"`                                                                       | ✅ Unit            |
 | FR-004         | CON-3: rejects option-like npm package (injection guard)          | TC-026 — `normalizeSource › "rejects malformed input"` (option-like `-x` package assertion)                                                               | ✅ Unit            |
+| FR-004         | AC-12: robust npm-pack-json parse (skip noise; metadata object)   | TC-027 — `resolveSource › "parseNpmPackJson skips prepack noise and parses the trailing array"` (+ scans-past-empty / scans-past-numeric tests)           | ✅ Unit            |
+| FR-004         | CON-4: descriptive SourceError on no-array/empty/invalid output   | TC-027 — `resolveSource › "parseNpmPackJson throws SourceError on no-bracket output"` (+ empty-array / numeric / no-string-filename throw tests)          | ✅ Unit            |
+| FR-004         | AC-13: unpinned re-fetch clears stale tarballs (cache hygiene)    | TC-028 — `resolveSource › "unpinned re-fetch does not accumulate stale tarballs"`                                                                         | ✅ Unit (fake)     |
 | FR-005         | AC-1: missing / shape-invalid (`{}`) registry read as empty       | TC-012 — `registry › "missing and malformed files read as empty"`                                                                                         | ✅ Unit            |
 | FR-005         | AC-2: atomic write + nested-dir creation round-trips              | TC-013 — `registry › "write is atomic and round-trips; upsert replaces by name"`                                                                          | ✅ Unit            |
 | FR-005         | AC-3: upsert replaces by name (count stays 1)                     | TC-013 — `registry › "write is atomic and round-trips; upsert replaces by name"`                                                                          | ✅ Unit            |
@@ -138,36 +141,38 @@ partial clones work offline.
 
 ## Test Case Summary
 
-| Test ID | Title                                                           | Type            | Priority | Traces To                                       | Status |
-| ------- | --------------------------------------------------------------- | --------------- | -------- | ----------------------------------------------- | ------ |
-| TC-001  | normalizeSource accepts every valid shape                       | Unit            | P0       | FR-001-AC-1                                     | ✅     |
-| TC-002  | normalizeSource rejects malformed input                         | Unit            | P0       | FR-001-AC-2, -AC-3, -AC-4                       | ✅     |
-| TC-003  | toGitUrl expands shorthand / passes through URLs                | Unit            | P1       | FR-002-AC-1, -AC-2, -AC-3, -AC-4                | ✅     |
-| TC-004  | validateMarketplaceManifest accepts valid (with/without name)   | Unit            | P0       | FR-003-AC-1, -AC-2                              | ✅     |
-| TC-005  | validateMarketplaceManifest rejects malformed manifests/entries | Unit            | P0       | FR-003-AC-3, -AC-4, -AC-5, -AC-6                | ✅     |
-| TC-006  | resolveSource path source: returns dir / missing throws         | Unit            | P0       | FR-004-AC-1, -AC-2                              | ✅     |
-| TC-007  | resolveSource url sources unsupported                           | Unit            | P1       | FR-004-AC-3                                     | ✅     |
-| TC-008  | resolveSource git-subdir sparse-checkout at a tag               | Unit (git)      | P0       | FR-004-AC-4, -CON-2                             | ✅     |
-| TC-009  | resolveSource whole-repo HEAD + re-fetch existing cache         | Unit (git)      | P0       | FR-004-AC-5                                     | ✅     |
-| TC-010  | resolveSource sha pin checks out exact commit                   | Unit (git)      | P0       | FR-004-AC-6                                     | ✅     |
-| TC-011  | resolveSource github + injected runner (no real git)            | Unit (fake)     | P0       | FR-004-AC-7, -CON-1, NFR-003                    | ✅     |
-| TC-012  | registry missing / malformed reads empty                        | Unit            | P0       | FR-005-AC-1                                     | ✅     |
-| TC-013  | registry atomic write round-trip + upsert by name               | Unit            | P0       | FR-005-AC-2, -AC-3                              | ✅     |
-| TC-014  | installEntry named git-subdir materializes + records            | Unit (git)      | P0       | FR-006-AC-1, US-002-AC-2                        | ✅     |
-| TC-015  | installEntry derives name via readName                          | Unit (git)      | P0       | FR-006-AC-2, US-002-AC-1                        | ✅     |
-| TC-016  | installEntry honors entry.path on whole-repo source             | Unit (git)      | P1       | FR-006-AC-3                                     | ✅     |
-| TC-017  | installEntry symlink mode + re-install replaces                 | Unit (git)      | P1       | FR-006-AC-4, US-002-AC-3                        | ✅     |
-| TC-018  | reconcile lazy install/skip + zero-git 2nd run                  | Unit (git)      | P0       | FR-007-AC-1, -AC-2, US-001-AC-1, -AC-2, NFR-003 | ✅     |
-| TC-019  | reconcile sync unchanged-stable / updated-moved                 | Unit (git)      | P0       | FR-007-AC-3, US-001-AC-3                        | ✅     |
-| TC-020  | reconcile lazy re-materializes vanished target                  | Unit (git)      | P1       | FR-007-AC-4                                     | ✅     |
-| TC-021  | reconcile lazy sha pin unchanged/updated                        | Unit (git)      | P0       | FR-007-AC-5                                     | ✅     |
-| TC-022  | resolveSource npm resolve+extract+pin (fake & default fetcher)  | Unit (fake/npm) | P0       | FR-004-AC-8                                     | ✅     |
-| TC-023  | resolveSource exact-cache vs unpinned-refetch (fake fetcher)    | Unit (fake)     | P0       | FR-004-AC-9                                     | ✅     |
-| TC-024  | defaultNpmFetcher local-pack offline (npm pack + tar)           | Unit (npm)      | P1       | FR-004-AC-10                                    | ✅     |
-| TC-025  | npmPackArgs pinned/unpinned + registry argv                     | Unit            | P1       | FR-004-AC-11                                    | ✅     |
-| TC-026  | normalizeSource rejects option-like npm package (`-x`)          | Unit            | P0       | FR-004-CON-3                                    | ✅     |
+| Test ID | Title                                                            | Type            | Priority | Traces To                                       | Status |
+| ------- | ---------------------------------------------------------------- | --------------- | -------- | ----------------------------------------------- | ------ |
+| TC-001  | normalizeSource accepts every valid shape                        | Unit            | P0       | FR-001-AC-1                                     | ✅     |
+| TC-002  | normalizeSource rejects malformed input                          | Unit            | P0       | FR-001-AC-2, -AC-3, -AC-4                       | ✅     |
+| TC-003  | toGitUrl expands shorthand / passes through URLs                 | Unit            | P1       | FR-002-AC-1, -AC-2, -AC-3, -AC-4                | ✅     |
+| TC-004  | validateMarketplaceManifest accepts valid (with/without name)    | Unit            | P0       | FR-003-AC-1, -AC-2                              | ✅     |
+| TC-005  | validateMarketplaceManifest rejects malformed manifests/entries  | Unit            | P0       | FR-003-AC-3, -AC-4, -AC-5, -AC-6                | ✅     |
+| TC-006  | resolveSource path source: returns dir / missing throws          | Unit            | P0       | FR-004-AC-1, -AC-2                              | ✅     |
+| TC-007  | resolveSource url sources unsupported                            | Unit            | P1       | FR-004-AC-3                                     | ✅     |
+| TC-008  | resolveSource git-subdir sparse-checkout at a tag                | Unit (git)      | P0       | FR-004-AC-4, -CON-2                             | ✅     |
+| TC-009  | resolveSource whole-repo HEAD + re-fetch existing cache          | Unit (git)      | P0       | FR-004-AC-5                                     | ✅     |
+| TC-010  | resolveSource sha pin checks out exact commit                    | Unit (git)      | P0       | FR-004-AC-6                                     | ✅     |
+| TC-011  | resolveSource github + injected runner (no real git)             | Unit (fake)     | P0       | FR-004-AC-7, -CON-1, NFR-003                    | ✅     |
+| TC-012  | registry missing / malformed reads empty                         | Unit            | P0       | FR-005-AC-1                                     | ✅     |
+| TC-013  | registry atomic write round-trip + upsert by name                | Unit            | P0       | FR-005-AC-2, -AC-3                              | ✅     |
+| TC-014  | installEntry named git-subdir materializes + records             | Unit (git)      | P0       | FR-006-AC-1, US-002-AC-2                        | ✅     |
+| TC-015  | installEntry derives name via readName                           | Unit (git)      | P0       | FR-006-AC-2, US-002-AC-1                        | ✅     |
+| TC-016  | installEntry honors entry.path on whole-repo source              | Unit (git)      | P1       | FR-006-AC-3                                     | ✅     |
+| TC-017  | installEntry symlink mode + re-install replaces                  | Unit (git)      | P1       | FR-006-AC-4, US-002-AC-3                        | ✅     |
+| TC-018  | reconcile lazy install/skip + zero-git 2nd run                   | Unit (git)      | P0       | FR-007-AC-1, -AC-2, US-001-AC-1, -AC-2, NFR-003 | ✅     |
+| TC-019  | reconcile sync unchanged-stable / updated-moved                  | Unit (git)      | P0       | FR-007-AC-3, US-001-AC-3                        | ✅     |
+| TC-020  | reconcile lazy re-materializes vanished target                   | Unit (git)      | P1       | FR-007-AC-4                                     | ✅     |
+| TC-021  | reconcile lazy sha pin unchanged/updated                         | Unit (git)      | P0       | FR-007-AC-5                                     | ✅     |
+| TC-022  | resolveSource npm resolve+extract+pin (fake & default fetcher)   | Unit (fake/npm) | P0       | FR-004-AC-8                                     | ✅     |
+| TC-023  | resolveSource exact-cache vs unpinned-refetch (fake fetcher)     | Unit (fake)     | P0       | FR-004-AC-9                                     | ✅     |
+| TC-024  | defaultNpmFetcher local-pack offline (npm pack + tar)            | Unit (npm)      | P1       | FR-004-AC-10                                    | ✅     |
+| TC-025  | npmPackArgs pinned/unpinned + registry argv                      | Unit            | P1       | FR-004-AC-11                                    | ✅     |
+| TC-026  | normalizeSource rejects option-like npm package (`-x`)           | Unit            | P0       | FR-004-CON-3                                    | ✅     |
+| TC-027  | parseNpmPackJson robust parse + descriptive parse-failure errors | Unit            | P0       | FR-004-AC-12, -CON-4                            | ✅     |
+| TC-028  | unpinned npm re-fetch clears stale tarballs (cache hygiene)      | Unit (fake)     | P1       | FR-004-AC-13                                    | ✅     |
 
-> TC-022…TC-026 belong to the shared TC-022…TC-054 block also used by the
+> TC-022…TC-028 belong to the shared TC-022…TC-054 block also used by the
 > concurrent `feat/plugin-discovery` PR; IDs are reconciled at the second merge
 > (this PR lands first).
 
@@ -175,11 +180,12 @@ partial clones work offline.
 
 ## Constraint Boundary Tests
 
-| Constraint   | Boundary / Case                                    | Test Value                               | Test Case      | Expected                                             |
-| ------------ | -------------------------------------------------- | ---------------------------------------- | -------------- | ---------------------------------------------------- |
-| FR-004-CON-1 | package-manager subprocess is the sole side effect | injected fake `GitRunner` / `NpmFetcher` | TC-011, TC-022 | resolves with no real git/npm; argv[0]=`clone`       |
-| FR-004-CON-2 | blobless + sparse                                  | `git-subdir` at `v0.2.0`                 | TC-008         | only the subdir present; tag sha resolved            |
-| FR-004-CON-3 | option-like npm package rejected                   | `{type:"npm", package:"-x"}`             | TC-026         | `SourceError` "must not begin with -"; no `npm pack` |
+| Constraint   | Boundary / Case                                    | Test Value                                    | Test Case      | Expected                                               |
+| ------------ | -------------------------------------------------- | --------------------------------------------- | -------------- | ------------------------------------------------------ |
+| FR-004-CON-1 | package-manager subprocess is the sole side effect | injected fake `GitRunner` / `NpmFetcher`      | TC-011, TC-022 | resolves with no real git/npm; argv[0]=`clone`         |
+| FR-004-CON-2 | blobless + sparse                                  | `git-subdir` at `v0.2.0`                      | TC-008         | only the subdir present; tag sha resolved              |
+| FR-004-CON-3 | option-like npm package rejected                   | `{type:"npm", package:"-x"}`                  | TC-026         | `SourceError` "must not begin with -"; no `npm pack`   |
+| FR-004-CON-4 | no metadata array in `npm pack --json` output      | `""`, `"[]"`, `"[1,2,3]"`, `'[{"name":"p"}]'` | TC-027         | `SourceError` "could not parse npm pack --json output" |
 
 ---
 
@@ -212,12 +218,14 @@ partial clones work offline.
 
 - **Acceptance Criteria → Test Case coverage: 40 of 40 functional ACs (100%) map to
   an executed Test Case.** All ACs of FR-001…FR-007 (incl. FR-002-AC-5 whitespace
-  trimming via the padded-input assertion in TC-003, and the four new FR-004 npm ACs
-  AC-8…AC-11), both FR-004 constraints, and all 10 user-story ACs map to a real test
-  in `tests/index.test.ts`. NFR-001…NFR-004 are covered by the coverage gate, the
-  zero-git assertion, inspection, and analysis.
-- The 25 TCs map to the tests in `tests/index.test.ts` (TC-022 spans both the
-  fake-fetcher and default-fetcher npm tests). All pass under `make test` at the
+  trimming via the padded-input assertion in TC-003, the four npm-resolution ACs
+  AC-8…AC-11, and the two npm-robustness ACs AC-12 robust-parse and AC-13
+  cache-hygiene), all four FR-004 constraints (CON-1…CON-4), and all 6 user-story ACs
+  map to a real test in `tests/index.test.ts`. NFR-001…NFR-004 are covered by the
+  coverage gate, the zero-git assertion, inspection, and analysis.
+- The 28 TCs map to the tests in `tests/index.test.ts` (TC-022 spans both the
+  fake-fetcher and default-fetcher npm tests; TC-027 spans the five `parseNpmPackJson`
+  noise/no-bracket/empty/numeric/no-filename tests). All pass under `make test` at the
   100% coverage gate.
 - All six test-matrix rules are satisfied: every AC has a TC (Rule 1); the
   copy/symlink materialize options are both exercised (Rule 2, TC-014/TC-017); the
@@ -256,4 +264,4 @@ Recorded during /spec-review. None block the spec; each is a candidate test/hard
 - The `url` source variant is deliberately unimplemented (FR-004-AC-3); there is
   therefore no happy-path TC for it, only the `UnsupportedSourceError` assertion
   (TC-007). This is correct, not a coverage gap. The `npm` variant **is** now
-  resolved (TC-022…TC-026).
+  resolved (TC-022…TC-028).

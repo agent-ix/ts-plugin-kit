@@ -68,28 +68,34 @@ export function npmPackArgs(
 /**
  * Robustly parse the metadata array `npm pack --json` prints. Packing a local
  * dir runs its `prepack`/`prepare`, whose stdout precedes the JSON and may even
- * contain stray `[` brackets (e.g. `[build] done`), so a naive
- * `indexOf("[")` slice mis-parses. Instead, scan candidate `[` positions and
- * take the first that parses to a non-empty JSON array. Throws a descriptive
- * `SourceError` when no parseable array (or an empty one) is found. Exported
- * pure so the noise/garbage branches stay unit-testable offline.
+ * contain stray `[` brackets (e.g. `[build] done`) or whole noise arrays (an
+ * empty `[]` or a numeric `[1,2,3]`), so a naive `indexOf("[")` slice
+ * mis-parses. Instead, scan **all** candidate `[` positions and accept the
+ * first that parses to an array whose first element is npm-pack metadata — an
+ * object carrying a string `filename`. Empty arrays, non-array-of-object noise,
+ * and unparseable slices are skipped. Throws a descriptive `SourceError` when no
+ * matching metadata array is found. Exported pure so the noise/garbage branches
+ * stay unit-testable offline.
  */
 export function parseNpmPackJson(out: string): {
   filename: string;
   version: string;
 } {
   for (let i = out.indexOf("["); i >= 0; i = out.indexOf("[", i + 1)) {
-    let parsed: { filename: string; version: string }[];
+    let parsed: unknown;
     try {
       parsed = JSON.parse(out.slice(i));
     } catch {
       continue;
     }
-    if (parsed.length === 0)
-      throw new SourceError(
-        `npm pack returned no package metadata: ${out.trim()}`,
-      );
-    return parsed[0];
+    const first = (parsed as unknown[])[0];
+    if (
+      first &&
+      typeof first === "object" &&
+      typeof (first as { filename?: unknown }).filename === "string"
+    ) {
+      return first as { filename: string; version: string };
+    }
   }
   throw new SourceError(
     `could not parse npm pack --json output: ${out.trim()}`,

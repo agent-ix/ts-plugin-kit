@@ -462,6 +462,38 @@ describe("resolveSource", () => {
     expect(() => parseNpmPackJson("[]\n")).toThrow(SourceError);
   });
 
+  // A bare `[]` printed before the real metadata array (e.g. an empty
+  // prepack-script result) must be scanned past, not treated as the answer.
+  test("parseNpmPackJson scans past a bare empty array before the real array", () => {
+    const out = `[]\n[{"filename":"p-1.2.3.tgz","version":"1.2.3"}]\n`;
+    expect(parseNpmPackJson(out)).toEqual({
+      filename: "p-1.2.3.tgz",
+      version: "1.2.3",
+    });
+  });
+
+  // A non-metadata noise array (e.g. `[1,2,3]` from a lifecycle script) must be
+  // scanned past in favor of the real npm-pack metadata array.
+  test("parseNpmPackJson scans past a numeric noise array before the real array", () => {
+    const out = `[1,2,3]\n[{"filename":"p-1.2.3.tgz","version":"1.2.3"}]\n`;
+    expect(parseNpmPackJson(out)).toEqual({
+      filename: "p-1.2.3.tgz",
+      version: "1.2.3",
+    });
+  });
+
+  // A numeric array is not npm-pack metadata: accepting it would yield
+  // `parsed[0] = 1` and a confusing tar failure, so it must throw instead.
+  test("parseNpmPackJson throws SourceError on a non-metadata numeric array", () => {
+    expect(() => parseNpmPackJson("[1,2,3]\n")).toThrow(SourceError);
+  });
+
+  // An array whose first element is an object lacking a string `filename` is not
+  // npm-pack metadata and must throw rather than be wrongly accepted.
+  test("parseNpmPackJson throws SourceError when the first element has no string filename", () => {
+    expect(() => parseNpmPackJson('[{"name":"p"}]\n')).toThrow(SourceError);
+  });
+
   // Disk hygiene: an unpinned re-fetch must not let stale tarballs pile up in
   // the npm cache dir; the prior fetch's artifacts are cleared before re-fetch.
   test("unpinned re-fetch does not accumulate stale tarballs", () => {

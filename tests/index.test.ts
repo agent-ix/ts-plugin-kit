@@ -5,16 +5,18 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 import {
   ManifestError,
   SourceError,
   UnsupportedSourceError,
+  defaultNpmFetcher,
   installEntry,
   normalizeSource,
   readRegistry,
@@ -27,8 +29,10 @@ import {
   type GitRunner,
   type InstallOptions,
   type InstalledPlugin,
+  type NpmFetcher,
   type Source,
 } from "../src";
+import { npmPackArgs, parseNpmPackJson } from "../src/resolve.js";
 
 // ── Fixture: a local bare git repo with two tagged versions, no network ──────
 
@@ -148,15 +152,20 @@ describe("normalizeSource", () => {
     expect(() => normalizeSource({ type: "url" } as Source)).toThrow(/url/);
     expect(() => normalizeSource({ type: "path" } as Source)).toThrow(/path/);
     expect(() => normalizeSource({ type: "npm" } as Source)).toThrow(/package/);
+    // An option-like package would inject a flag into `npm pack` (TC-026).
+    expect(() => normalizeSource({ type: "npm", package: "-x" })).toThrow(
+      /must not begin with/,
+    );
     expect(() =>
       normalizeSource({ type: "bogus" } as unknown as Source),
     ).toThrow(/unknown source type/);
   });
 
-  // FR-004-CON-3..6: source fields that flow into the `git` argv must not be
-  // interpretable as a CLI flag (leading `-`), or git treats them as an option
-  // (e.g. `ref` of `--upload-pack=<cmd>`) — a second-order command-line
-  // injection. `normalizeSource` rejects them before any git invocation.
+  // TC-029 / FR-004-AC-14, -CON-5: source fields that flow into the `git` argv
+  // must not be interpretable as a CLI flag (leading `-`), or git treats them as
+  // an option (e.g. `ref` of `--upload-pack=<cmd>`) — a second-order
+  // command-line injection. `normalizeSource` rejects them before any git
+  // invocation.
   test("rejects option-like git argv fields (injection guard)", () => {
     // repo / url reach `git clone` / `git fetch`
     expect(() =>
@@ -195,7 +204,8 @@ describe("normalizeSource", () => {
     ).toThrow(SourceError);
   });
 
-  // TC-023 (F1): the argv guard must validate the value that actually reaches the
+  // TC-030 / FR-004-AC-15, -CON-5: the argv guard must validate the value that
+  // actually reaches the
   // `git` argv. `toGitUrl` trims its input (and passes a `://` value through
   // unwrapped), so a leading-whitespace-then-dash payload (e.g.
   // `" --upload-pack=touch /tmp/pwned ext://x"`) would slip past a raw
@@ -221,7 +231,8 @@ describe("normalizeSource", () => {
     ).toThrow(/must not begin with "-"/);
   });
 
-  // TC-024 (F2): `git-subdir.path` flows into `git sparse-checkout set <path>`
+  // TC-031 / FR-004-AC-16, -CON-5: `git-subdir.path` flows into
+  // `git sparse-checkout set <path>`
   // and was only checked for non-emptiness (`req`), so an option-like value
   // (`--stdin`, `-X`) reached the argv as a flag. Guard it like the other argv
   // fields.
@@ -342,11 +353,8 @@ describe("resolveSource", () => {
     ).toThrow(SourceError);
   });
 
-  test("url and npm sources are not yet supported", () => {
+  test("url sources are not yet supported", () => {
     expect(() => resolveSource({ type: "url", url: "u" }, opts())).toThrow(
-      UnsupportedSourceError,
-    );
-    expect(() => resolveSource({ type: "npm", package: "p" }, opts())).toThrow(
       UnsupportedSourceError,
     );
   });
@@ -386,6 +394,221 @@ describe("resolveSource", () => {
     );
     expect(r.sha).toBe("fakesha");
     expect(calls[0][0]).toBe("clone");
+  });
+
+  // A fake fetcher that materializes a flattened module tarball (manifest at the
+  // content root) without a real npm/network, and counts how often it runs.
+  function fakeNpm(version: string) {
+    const state = { calls: 0 };
+    const fetcher: NpmFetcher = (spec, destDir) => {
+      state.calls++;
+      const pkgDir = join(destDir, "package");
+      mkdirSync(pkgDir, { recursive: true });
+      const name = spec.package.replace(/^@[^/]+\//, "");
+      writeFileSync(
+        join(pkgDir, "manifest.yaml"),
+        `name: ${name}\nversion: ${version}\n`,
+      );
+      writeFileSync(
+        join(pkgDir, "package.json"),
+        JSON.stringify({ name: spec.package, version }),
+      );
+      // exact pins resolve to themselves; ranges/latest resolve to `version`.
+      const resolved = /^\d+\.\d+\.\d+$/.test(spec.version ?? "")
+        ? (spec.version as string)
+        : version;
+      return { dir: pkgDir, version: resolved };
+    };
+    return { fetcher, state };
+  }
+
+  test("npm source downloads, extracts, and pins the resolved version", () => {
+    const { fetcher, state } = fakeNpm("0.4.0");
+    const r = resolveSource(
+      {
+        type: "npm",
+        package: "@agent-ix/spec-artifacts-app",
+        version: "0.4.0",
+      },
+      opts({ npm: fetcher }),
+    );
+    expect(existsSync(join(r.dir, "manifest.yaml"))).toBe(true);
+    expect(r.sha).toBe("0.4.0");
+    expect(r.ref).toBe("0.4.0");
+    expect(state.calls).toBe(1);
+  });
+
+  test("exact-version npm pins are cached; unpinned specs re-fetch", () => {
+    const base = opts();
+
+    const pinned = fakeNpm("0.4.0");
+    const oPinned = { ...base, npm: pinned.fetcher };
+    const src = {
+      type: "npm" as const,
+      package: "@agent-ix/x",
+      version: "0.4.0",
+    };
+    resolveSource(src, oPinned);
+    resolveSource(src, oPinned);
+    expect(pinned.state.calls).toBe(1); // second resolve hits the cache
+
+    const unpinned = fakeNpm("9.9.9");
+    const oUnpinned = { ...base, npm: unpinned.fetcher };
+    const latest = { type: "npm" as const, package: "@agent-ix/y" };
+    const a = resolveSource(latest, oUnpinned);
+    resolveSource(latest, oUnpinned);
+    expect(unpinned.state.calls).toBe(2); // unpinned always re-fetches
+    expect(a.sha).toBe("9.9.9"); // resolved version is the durable pin
+  });
+
+  // TC-025 / FR-004-AC-11: argv builder covers the version + registry branches
+  // purely (offline), so the network-only ref/registry paths stay tested.
+  test("npmPackArgs builds pinned, unpinned, and registry argv", () => {
+    expect(npmPackArgs({ package: "p", version: "1.2.3" }, "/d")).toEqual([
+      "pack",
+      "p@1.2.3",
+      "--pack-destination",
+      "/d",
+      "--json",
+    ]);
+    expect(npmPackArgs({ package: "p" }, "/d")).toEqual([
+      "pack",
+      "p",
+      "--pack-destination",
+      "/d",
+      "--json",
+    ]);
+    expect(npmPackArgs({ package: "p", registry: "https://r" }, "/d")).toEqual([
+      "pack",
+      "p",
+      "--pack-destination",
+      "/d",
+      "--json",
+      "--registry",
+      "https://r",
+    ]);
+  });
+
+  // TC-024 / FR-004-AC-10: the real fetcher packs+extracts a LOCAL folder via
+  // `npm pack` + `tar`, fully offline (no registry, no network).
+  test("defaultNpmFetcher packs and extracts a local package offline", () => {
+    const fixtureDir = mkdtempSync(join(tmpdir(), "tpk-mod-"));
+    writeFileSync(
+      join(fixtureDir, "package.json"),
+      JSON.stringify({ name: "local-mod", version: "1.2.3" }),
+    );
+    writeFileSync(
+      join(fixtureDir, "manifest.yaml"),
+      "name: local-mod\nversion: 1.2.3\n",
+    );
+    const destDir = mkdtempSync(join(tmpdir(), "tpk-dest-"));
+    try {
+      const r = defaultNpmFetcher({ package: fixtureDir }, destDir);
+      expect(r.version).toBe("1.2.3");
+      expect(existsSync(join(r.dir, "package.json"))).toBe(true);
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true });
+      rmSync(destDir, { recursive: true, force: true });
+    }
+  });
+
+  // FR-004-AC-8 via the DEFAULT fetcher: resolveSource with no injected `npm`
+  // falls back to defaultNpmFetcher, packing a local folder offline.
+  test("npm source resolves via the default fetcher when none is injected", () => {
+    const fixtureDir = mkdtempSync(join(tmpdir(), "tpk-srcmod-"));
+    writeFileSync(
+      join(fixtureDir, "package.json"),
+      JSON.stringify({ name: "local-mod", version: "1.2.3" }),
+    );
+    writeFileSync(
+      join(fixtureDir, "manifest.yaml"),
+      "name: local-mod\nversion: 1.2.3\n",
+    );
+    try {
+      const r = resolveSource({ type: "npm", package: fixtureDir }, opts());
+      expect(existsSync(join(r.dir, "manifest.yaml"))).toBe(true);
+      expect(r.sha).toBe("1.2.3");
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true });
+    }
+  });
+
+  // Robust npm pack --json parsing: a local pack runs `prepack`/`prepare`
+  // whose stdout precedes the JSON, so the parser must skip lifecycle noise
+  // (including stray `[` brackets) and fail descriptively on garbage output.
+  test("parseNpmPackJson skips prepack noise and parses the trailing array", () => {
+    const out = `[build] starting\n[build] done\n[{"filename":"p-1.2.3.tgz","version":"1.2.3"}]\n`;
+    expect(parseNpmPackJson(out)).toEqual({
+      filename: "p-1.2.3.tgz",
+      version: "1.2.3",
+    });
+  });
+
+  test("parseNpmPackJson throws SourceError on no-bracket output", () => {
+    expect(() => parseNpmPackJson("build done, no json here\n")).toThrow(
+      SourceError,
+    );
+  });
+
+  test("parseNpmPackJson throws SourceError on an empty array", () => {
+    expect(() => parseNpmPackJson("[]\n")).toThrow(SourceError);
+  });
+
+  // A bare `[]` printed before the real metadata array (e.g. an empty
+  // prepack-script result) must be scanned past, not treated as the answer.
+  test("parseNpmPackJson scans past a bare empty array before the real array", () => {
+    const out = `[]\n[{"filename":"p-1.2.3.tgz","version":"1.2.3"}]\n`;
+    expect(parseNpmPackJson(out)).toEqual({
+      filename: "p-1.2.3.tgz",
+      version: "1.2.3",
+    });
+  });
+
+  // A non-metadata noise array (e.g. `[1,2,3]` from a lifecycle script) must be
+  // scanned past in favor of the real npm-pack metadata array.
+  test("parseNpmPackJson scans past a numeric noise array before the real array", () => {
+    const out = `[1,2,3]\n[{"filename":"p-1.2.3.tgz","version":"1.2.3"}]\n`;
+    expect(parseNpmPackJson(out)).toEqual({
+      filename: "p-1.2.3.tgz",
+      version: "1.2.3",
+    });
+  });
+
+  // A numeric array is not npm-pack metadata: accepting it would yield
+  // `parsed[0] = 1` and a confusing tar failure, so it must throw instead.
+  test("parseNpmPackJson throws SourceError on a non-metadata numeric array", () => {
+    expect(() => parseNpmPackJson("[1,2,3]\n")).toThrow(SourceError);
+  });
+
+  // An array whose first element is an object lacking a string `filename` is not
+  // npm-pack metadata and must throw rather than be wrongly accepted.
+  test("parseNpmPackJson throws SourceError when the first element has no string filename", () => {
+    expect(() => parseNpmPackJson('[{"name":"p"}]\n')).toThrow(SourceError);
+  });
+
+  // Disk hygiene: an unpinned re-fetch must not let stale tarballs pile up in
+  // the npm cache dir; the prior fetch's artifacts are cleared before re-fetch.
+  test("unpinned re-fetch does not accumulate stale tarballs", () => {
+    let n = 0;
+    const fetcher: NpmFetcher = (_spec, destDir) => {
+      n++;
+      // mimic `npm pack` leaving a uniquely-named tarball in destDir
+      writeFileSync(join(destDir, `pkg-${n}.tgz`), "");
+      const pkgDir = join(destDir, "package");
+      mkdirSync(pkgDir, { recursive: true });
+      writeFileSync(
+        join(pkgDir, "package.json"),
+        JSON.stringify({ version: "1.0.0" }),
+      );
+      return { dir: pkgDir, version: "1.0.0" };
+    };
+    const o = opts({ npm: fetcher });
+    const src = { type: "npm" as const, package: "@agent-ix/z" };
+    resolveSource(src, o);
+    const r = resolveSource(src, o);
+    const cacheDir = dirname(r.dir);
+    const tarballs = readdirSync(cacheDir).filter((f) => f.endsWith(".tgz"));
+    expect(tarballs).toEqual(["pkg-2.tgz"]); // prior tarball cleaned up
   });
 });
 

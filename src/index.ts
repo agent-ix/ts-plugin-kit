@@ -21,9 +21,11 @@ export {
 
 export {
   type GitRunner,
+  type NpmFetcher,
   type ResolveOptions,
   type ResolvedSource,
   defaultGitRunner,
+  defaultNpmFetcher,
   resolveSource,
 } from "./resolve.js";
 

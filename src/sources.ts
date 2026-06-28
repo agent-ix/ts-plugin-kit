@@ -49,10 +49,11 @@ function req(value: unknown, field: string): string {
 
 /**
  * Like {@link req}, but also rejects an option-like value (leading `-`). Source
- * fields that flow into a `git` argv must not be interpretable as a CLI flag —
- * e.g. a `ref` of `--upload-pack=<cmd>` or a `repo` of `--output=…` would become
- * a `git` option (a second-order command-line injection), so it is rejected up
- * front, before any git invocation.
+ * fields that flow into a `git`/`npm` argv must not be interpretable as a CLI
+ * flag — e.g. a package named `-x` would become an `npm pack` option, or a `ref`
+ * of `--upload-pack=<cmd>` / a `repo` of `--output=…` would become a `git`
+ * option (a second-order command-line injection), so it is rejected up front,
+ * before any subprocess invocation.
  *
  * The check is on the **trimmed** value: `toGitUrl` does `raw.trim()` before the
  * value reaches `git clone`/`git fetch`, so a leading-whitespace-then-dash
@@ -110,7 +111,7 @@ export function normalizeSource(source: Source): Source {
       req(source.path, "path");
       return source;
     case "npm":
-      req(source.package, "package");
+      reqArg(source.package, "package");
       return source;
     default:
       throw new SourceError(

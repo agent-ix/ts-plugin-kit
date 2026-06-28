@@ -47,6 +47,20 @@ function req(value: unknown, field: string): string {
   return value;
 }
 
+/**
+ * Like {@link req}, but also rejects an option-like value (leading `-`). Source
+ * fields that flow into a `git`/`npm` argv must not be interpretable as a CLI
+ * flag — e.g. a package named `-x` would become an `npm pack` option (a
+ * second-order command-line injection), so it is rejected up front.
+ */
+function reqArg(value: unknown, field: string): string {
+  const v = req(value, field);
+  if (v.startsWith("-")) {
+    throw new SourceError(`source field "${field}" must not begin with "-"`);
+  }
+  return v;
+}
+
 /** Validate a source descriptor, throwing {@link SourceError} on malformed input. */
 export function normalizeSource(source: Source): Source {
   if (!source || typeof (source as { type?: unknown }).type !== "string") {
@@ -70,7 +84,7 @@ export function normalizeSource(source: Source): Source {
       req(source.path, "path");
       return source;
     case "npm":
-      req(source.package, "package");
+      reqArg(source.package, "package");
       return source;
     default:
       throw new SourceError(

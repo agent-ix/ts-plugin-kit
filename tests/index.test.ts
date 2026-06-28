@@ -5,11 +5,12 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 import {
   ManifestError,
@@ -31,7 +32,7 @@ import {
   type NpmFetcher,
   type Source,
 } from "../src";
-import { npmPackArgs } from "../src/resolve.js";
+import { npmPackArgs, parseNpmPackJson } from "../src/resolve.js";
 
 // ── Fixture: a local bare git repo with two tagged versions, no network ──────
 
@@ -438,6 +439,52 @@ describe("resolveSource", () => {
     } finally {
       rmSync(fixtureDir, { recursive: true, force: true });
     }
+  });
+
+  // Robust npm pack --json parsing: a local pack runs `prepack`/`prepare`
+  // whose stdout precedes the JSON, so the parser must skip lifecycle noise
+  // (including stray `[` brackets) and fail descriptively on garbage output.
+  test("parseNpmPackJson skips prepack noise and parses the trailing array", () => {
+    const out = `[build] starting\n[build] done\n[{"filename":"p-1.2.3.tgz","version":"1.2.3"}]\n`;
+    expect(parseNpmPackJson(out)).toEqual({
+      filename: "p-1.2.3.tgz",
+      version: "1.2.3",
+    });
+  });
+
+  test("parseNpmPackJson throws SourceError on no-bracket output", () => {
+    expect(() => parseNpmPackJson("build done, no json here\n")).toThrow(
+      SourceError,
+    );
+  });
+
+  test("parseNpmPackJson throws SourceError on an empty array", () => {
+    expect(() => parseNpmPackJson("[]\n")).toThrow(SourceError);
+  });
+
+  // Disk hygiene: an unpinned re-fetch must not let stale tarballs pile up in
+  // the npm cache dir; the prior fetch's artifacts are cleared before re-fetch.
+  test("unpinned re-fetch does not accumulate stale tarballs", () => {
+    let n = 0;
+    const fetcher: NpmFetcher = (_spec, destDir) => {
+      n++;
+      // mimic `npm pack` leaving a uniquely-named tarball in destDir
+      writeFileSync(join(destDir, `pkg-${n}.tgz`), "");
+      const pkgDir = join(destDir, "package");
+      mkdirSync(pkgDir, { recursive: true });
+      writeFileSync(
+        join(pkgDir, "package.json"),
+        JSON.stringify({ version: "1.0.0" }),
+      );
+      return { dir: pkgDir, version: "1.0.0" };
+    };
+    const o = opts({ npm: fetcher });
+    const src = { type: "npm" as const, package: "@agent-ix/z" };
+    resolveSource(src, o);
+    const r = resolveSource(src, o);
+    const cacheDir = dirname(r.dir);
+    const tarballs = readdirSync(cacheDir).filter((f) => f.endsWith(".tgz"));
+    expect(tarballs).toEqual(["pkg-2.tgz"]); // prior tarball cleaned up
   });
 });
 

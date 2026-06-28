@@ -1,5 +1,11 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join, resolve as resolvePath } from "node:path";
 
 import {
@@ -29,6 +35,14 @@ export const defaultGitRunner: GitRunner = (args, opts) => {
  * Downloads and extracts an npm package tarball into `destDir`, returning the
  * resolved content root and exact published version. Injectable so tests fake
  * it without a real `npm`/network. The default uses `npm pack` + `tar`.
+ *
+ * **Contract.** A fetcher MUST extract the package so its content root lives at
+ * `<destDir>/package` (the layout `npm pack` tarballs already use), and SHOULD
+ * return that path as `dir`. `resolveNpm` records only the resolved `version`
+ * (the durable pin) durably; on a later exact-version cache hit it serves
+ * `<cacheDir>/package` directly and does **not** re-read the `dir` a custom
+ * fetcher returned. A fetcher that extracts elsewhere is therefore honored on
+ * the miss path but silently ignored on subsequent cached resolves.
  */
 export interface NpmFetcher {
   (
@@ -51,6 +65,37 @@ export function npmPackArgs(
   return args;
 }
 
+/**
+ * Robustly parse the metadata array `npm pack --json` prints. Packing a local
+ * dir runs its `prepack`/`prepare`, whose stdout precedes the JSON and may even
+ * contain stray `[` brackets (e.g. `[build] done`), so a naive
+ * `indexOf("[")` slice mis-parses. Instead, scan candidate `[` positions and
+ * take the first that parses to a non-empty JSON array. Throws a descriptive
+ * `SourceError` when no parseable array (or an empty one) is found. Exported
+ * pure so the noise/garbage branches stay unit-testable offline.
+ */
+export function parseNpmPackJson(out: string): {
+  filename: string;
+  version: string;
+} {
+  for (let i = out.indexOf("["); i >= 0; i = out.indexOf("[", i + 1)) {
+    let parsed: { filename: string; version: string }[];
+    try {
+      parsed = JSON.parse(out.slice(i));
+    } catch {
+      continue;
+    }
+    if (parsed.length === 0)
+      throw new SourceError(
+        `npm pack returned no package metadata: ${out.trim()}`,
+      );
+    return parsed[0];
+  }
+  throw new SourceError(
+    `could not parse npm pack --json output: ${out.trim()}`,
+  );
+}
+
 /** Default fetcher: `npm pack <spec>` then extract the tarball with `tar`. */
 export const defaultNpmFetcher: NpmFetcher = (spec, destDir) => {
   mkdirSync(destDir, { recursive: true });
@@ -58,12 +103,7 @@ export const defaultNpmFetcher: NpmFetcher = (spec, destDir) => {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
   });
-  // Packing a local dir runs its `prepack`, whose stdout precedes the JSON;
-  // slice from the array start so lifecycle noise doesn't break the parse.
-  const meta = JSON.parse(out.slice(out.indexOf("[")))[0] as {
-    filename: string;
-    version: string;
-  };
+  const meta = parseNpmPackJson(out);
   execFileSync("tar", ["-xzf", join(destDir, meta.filename), "-C", destDir], {
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -72,7 +112,10 @@ export const defaultNpmFetcher: NpmFetcher = (spec, destDir) => {
 };
 
 export interface ResolveOptions {
-  /** Root under which sources are cached (`<cacheRoot>/git/<key>`). */
+  /**
+   * Root under which sources are cached: git sources under
+   * `<cacheRoot>/git/<key>`, npm sources under `<cacheRoot>/npm/<key>`.
+   */
   cacheRoot: string;
   git?: GitRunner;
   npm?: NpmFetcher;
@@ -81,7 +124,7 @@ export interface ResolveOptions {
 export interface ResolvedSource {
   /** Absolute path to the resolved content root. */
   dir: string;
-  /** Resolved commit sha (git sources). */
+  /** Durable pin: the resolved commit sha (git sources) or published version (npm sources). */
   sha?: string;
   /** The git ref that was requested, echoed back for the registry record. */
   ref?: string;
@@ -93,7 +136,9 @@ function cacheKey(url: string): string {
 
 /**
  * Fetch a source to a local directory and return its resolved content root +
- * durable sha pin. Synchronous: git is the only side effect.
+ * durable pin. Synchronous: the only side effect is the per-source
+ * package-manager subprocess (`git` for git sources; `npm pack` + `tar` for npm
+ * sources) plus the filesystem reads/writes under `cacheRoot`.
  */
 export function resolveSource(
   source: Source,
@@ -176,6 +221,10 @@ function resolveNpm(
     };
   }
 
+  // Cache miss (unpinned/range re-fetch, or a not-yet-cached pin): clear any
+  // prior tarball + extraction so the cache dir doesn't accumulate stale
+  // artifacts across "latest" re-fetches.
+  rmSync(cacheDir, { recursive: true, force: true });
   mkdirSync(cacheDir, { recursive: true });
   const { dir, version } = fetch(
     {

@@ -67,12 +67,12 @@ own. The individual rules are specified under Behavior below.
 
 | ID          | Criteria                                                                                                                                                        | Verification  |
 | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| FR-011-AC-1 | A GitHub `200` carrying rate-limit headers populates `rate.github` with `limit`, `remaining`, and `resetAt`.                                                    | Test (TC-037) |
-| FR-011-AC-2 | A GitHub `403` with `remaining:0` yields a `SearchBackendError{rateLimited:true}` carrying the reset time, and no exception propagates.                         | Test (TC-038) |
-| FR-011-AC-3 | After a window is recorded exhausted, the next `search` skips the GitHub request while the injected clock is before `resetAt`.                                  | Test (TC-039) |
-| FR-011-AC-4 | Once the injected clock advances past `resetAt` (seconds), the next `search` issues the GitHub request again.                                                   | Test (TC-040) |
-| FR-011-AC-5 | On the first search with no prior rate snapshot, the GitHub request is issued (no short-circuit), and `lastRate()` is an empty object until a response is seen. | Test (TC-053) |
-| FR-011-AC-6 | A rate-limit header that is absent or parses to a non-finite number yields no rate info (`rate.github` undefined), not a `NaN`-valued `RateLimit`.              | Test (TC-058) |
+| FR-011-AC-1 | A GitHub `200` carrying rate-limit headers populates `rate.github` with `limit`, `remaining`, and `resetAt`.                                                    | Test (TC-047) |
+| FR-011-AC-2 | A GitHub `403` with `remaining:0` yields a `SearchBackendError{rateLimited:true}` carrying the reset time, and no exception propagates.                         | Test (TC-048) |
+| FR-011-AC-3 | After a window is recorded exhausted, the next `search` skips the GitHub request while the injected clock is before `resetAt`.                                  | Test (TC-049) |
+| FR-011-AC-4 | Once the injected clock advances past `resetAt` (seconds), the next `search` issues the GitHub request again.                                                   | Test (TC-050) |
+| FR-011-AC-5 | On the first search with no prior rate snapshot, the GitHub request is issued (no short-circuit), and `lastRate()` is an empty object until a response is seen. | Test (TC-063) |
+| FR-011-AC-6 | A rate-limit header that is absent or parses to a non-finite number yields no rate info (`rate.github` undefined), not a `NaN`-valued `RateLimit`.              | Test (TC-068) |
 
 ## Dependencies
 

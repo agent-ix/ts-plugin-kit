@@ -65,7 +65,7 @@ const okVerifier = (caps: unknown = { x: 1 }): CandidateVerifier => ({
 // ── FR-008: candidate search ─────────────────────────────────────────────────
 
 describe("searchPlugins — candidate search (FR-008)", () => {
-  it("merges npm + github candidates into one ranked list (TC-022)", async () => {
+  it("merges npm + github candidates into one ranked list (TC-032)", async () => {
     const http: HttpFetcher = async (url) =>
       url.includes("/-/v1/search")
         ? res(npmBody(npmPkg({ links: {} })))
@@ -83,7 +83,7 @@ describe("searchPlugins — candidate search (FR-008)", () => {
     expect(r.errors).toEqual([]);
   });
 
-  it("composes encoded npm size + github per_page queries (TC-023)", async () => {
+  it("composes encoded npm size + github per_page queries (TC-033)", async () => {
     const urls: string[] = [];
     const http: HttpFetcher = async (url) => {
       urls.push(url);
@@ -98,7 +98,7 @@ describe("searchPlugins — candidate search (FR-008)", () => {
     expect(ghUrl).toContain("per_page=7");
   });
 
-  it("one backend failing still returns the other plus an error (TC-024)", async () => {
+  it("one backend failing still returns the other plus an error (TC-034)", async () => {
     const http: HttpFetcher = async (url) => {
       if (url.includes("/-/v1/search"))
         return res(npmBody(npmPkg({ links: {} })));
@@ -110,7 +110,7 @@ describe("searchPlugins — candidate search (FR-008)", () => {
     expect(r.errors).toEqual([{ backend: "github", message: "gh down" }]);
   });
 
-  it("adds Authorization only with a token and honors the sources filter (TC-025)", async () => {
+  it("adds Authorization only with a token and honors the sources filter (TC-035)", async () => {
     let ghHeaders: Record<string, string> | undefined;
     let npmCalled = false;
     const http: HttpFetcher = async (url, init) => {
@@ -134,7 +134,7 @@ describe("searchPlugins — candidate search (FR-008)", () => {
     expect(ghHeaders?.Authorization).toBeUndefined();
   });
 
-  it("dedupes an npm package against its github repo, preferring npm (TC-026)", async () => {
+  it("dedupes an npm package against its github repo, preferring npm (TC-036)", async () => {
     const http: HttpFetcher = async (url) =>
       url.includes("/-/v1/search")
         ? res(
@@ -207,7 +207,7 @@ describe("searchPlugins — candidate search (FR-008)", () => {
     expect(r.results).toHaveLength(1);
   });
 
-  it("returns empty results with one error per failed backend (TC-043)", async () => {
+  it("returns empty results with one error per failed backend (TC-053)", async () => {
     const http: HttpFetcher = async () => {
       throw new Error("net");
     };
@@ -216,7 +216,7 @@ describe("searchPlugins — candidate search (FR-008)", () => {
     expect(r.errors.map((e) => e.backend).sort()).toEqual(["github", "npm"]);
   });
 
-  it("tolerates missing optional fields and skips invalid items (TC-044)", async () => {
+  it("tolerates missing optional fields and skips invalid items (TC-054)", async () => {
     const http: HttpFetcher = async (url) =>
       url.includes("/-/v1/search")
         ? res({
@@ -279,7 +279,7 @@ describe("searchPlugins — candidate search (FR-008)", () => {
     expect(gh.errors[0].rateLimited).toBeUndefined();
   });
 
-  it("clamps limit to each backend maximum (TC-045)", async () => {
+  it("clamps limit to each backend maximum (TC-055)", async () => {
     const urls: string[] = [];
     const http: HttpFetcher = async (url) => {
       urls.push(url);
@@ -292,7 +292,7 @@ describe("searchPlugins — candidate search (FR-008)", () => {
     );
   });
 
-  it("ranks deterministically with a fullName tie-break (TC-046)", async () => {
+  it("ranks deterministically with a fullName tie-break (TC-056)", async () => {
     const items = [
       ghItem({
         full_name: "o/b",
@@ -354,7 +354,7 @@ describe("searchPlugins — candidate search (FR-008)", () => {
     expect(r.results.find((x) => x.name === "b")!.url).toBe("https://npmlink");
   });
 
-  it("propagates signal and surfaces an abort as a backend error (TC-047)", async () => {
+  it("propagates signal and surfaces an abort as a backend error (TC-057)", async () => {
     const seen: (AbortSignal | undefined)[] = [];
     const ctrl = new AbortController();
     const http: HttpFetcher = async (url, init) => {
@@ -368,7 +368,7 @@ describe("searchPlugins — candidate search (FR-008)", () => {
     expect(r.errors[0].backend).toBe("github");
   });
 
-  it("never leaks the github token into errors, keys, or results (TC-054)", async () => {
+  it("never leaks the github token into errors, keys, or results (TC-064)", async () => {
     const http: HttpFetcher = async (url) =>
       url.includes("/search/repositories")
         ? res({}, { status: 403, headers: RL("60", "0", "999") })
@@ -452,14 +452,14 @@ describe("searchPlugins — verification (FR-009)", () => {
   const npmOnly =
     (manifest: HttpResponse | (() => Promise<HttpResponse>)): HttpFetcher =>
     async (url) => {
-      if (url.includes("unpkg.com"))
+      if (new URL(url).host === "unpkg.com")
         return typeof manifest === "function" ? manifest() : manifest;
       if (url.includes("/-/v1/search"))
         return res(npmBody(npmPkg({ name: "n", links: {} })));
       return res(ghBody());
     };
 
-  it("keeps a candidate whose verify returns capabilities (TC-027)", async () => {
+  it("keeps a candidate whose verify returns capabilities (TC-037)", async () => {
     const r = await searchPlugins({
       tag: "t",
       sources: ["npm"],
@@ -471,7 +471,7 @@ describe("searchPlugins — verification (FR-009)", () => {
     expect(r.results[0].capabilities).toEqual({ ok: true });
   });
 
-  it("drops a candidate whose verify returns null (TC-028)", async () => {
+  it("drops a candidate whose verify returns null (TC-038)", async () => {
     const r = await searchPlugins({
       tag: "t",
       sources: ["npm"],
@@ -481,7 +481,7 @@ describe("searchPlugins — verification (FR-009)", () => {
     expect(r.results).toEqual([]);
   });
 
-  it("drops a 404 candidate as incompatible without calling verify (TC-029)", async () => {
+  it("drops a 404 candidate as incompatible without calling verify (TC-039)", async () => {
     let verifyCalls = 0;
     const r = await searchPlugins({
       tag: "t",
@@ -500,13 +500,11 @@ describe("searchPlugins — verification (FR-009)", () => {
     expect(verifyCalls).toBe(0);
   });
 
-  it("fetches manifests from unpkg and raw.githubusercontent (TC-030)", async () => {
+  it("fetches manifests from unpkg and raw.githubusercontent (TC-040)", async () => {
     const urls: string[] = [];
     const http: HttpFetcher = async (url) => {
-      if (
-        url.includes("unpkg.com") ||
-        url.includes("raw.githubusercontent.com")
-      ) {
+      const host = new URL(url).host;
+      if (host === "unpkg.com" || host === "raw.githubusercontent.com") {
         urls.push(url);
         return res("m");
       }
@@ -521,7 +519,7 @@ describe("searchPlugins — verification (FR-009)", () => {
     );
   });
 
-  it("skips verification entirely when no verifier is given (TC-031)", async () => {
+  it("skips verification entirely when no verifier is given (TC-041)", async () => {
     let manifestFetched = false;
     const http: HttpFetcher = async (url) => {
       if (url.includes("unpkg") || url.includes("raw.github")) {
@@ -537,7 +535,7 @@ describe("searchPlugins — verification (FR-009)", () => {
     expect(manifestFetched).toBe(false);
   });
 
-  it("drops on a transient fetch failure and records a transient error (TC-048)", async () => {
+  it("drops on a transient fetch failure and records a transient error (TC-058)", async () => {
     const r = await searchPlugins({
       tag: "t",
       sources: ["npm"],
@@ -569,7 +567,7 @@ describe("searchPlugins — verification (FR-009)", () => {
     expect(r.errors[0]).toMatchObject({ backend: "npm", transient: true });
   });
 
-  it("isolates a throwing verify to its candidate (TC-049)", async () => {
+  it("isolates a throwing verify to its candidate (TC-059)", async () => {
     const http: HttpFetcher = async (url) => {
       if (url.includes("unpkg.com/bad")) return res("THROW");
       if (url.includes("unpkg.com/good")) return res("OK");
@@ -598,10 +596,10 @@ describe("searchPlugins — verification (FR-009)", () => {
     expect(r.results.map((x) => x.name)).toEqual(["good"]);
   });
 
-  it("rejects path-traversal / control-char candidate names before fetching a manifest (TC-057)", async () => {
+  it("rejects path-traversal / control-char candidate names before fetching a manifest (TC-067)", async () => {
     const fetched: string[] = [];
     const http: HttpFetcher = async (url) => {
-      if (url.includes("unpkg.com")) {
+      if (new URL(url).host === "unpkg.com") {
         fetched.push(url);
         return res("m");
       }
@@ -625,7 +623,7 @@ describe("searchPlugins — verification (FR-009)", () => {
     expect(fetched).toEqual(["https://unpkg.com/good/manifest.yaml"]);
   });
 
-  it("caps manifest-fetch concurrency at six (TC-050)", async () => {
+  it("caps manifest-fetch concurrency at six (TC-060)", async () => {
     let inFlight = 0;
     let maxInFlight = 0;
     const http: HttpFetcher = async (url) => {
@@ -659,7 +657,7 @@ describe("searchPlugins — verification (FR-009)", () => {
 // ── FR-010: TTL cache + factory ──────────────────────────────────────────────
 
 describe("createTtlCache (FR-010)", () => {
-  it("returns before expiry and evicts after the clock advances (TC-032)", () => {
+  it("returns before expiry and evicts after the clock advances (TC-042)", () => {
     let t = 1000;
     const c = createTtlCache<string>({ ttlMs: 100, clock: { now: () => t } });
     c.set("k", "v");
@@ -670,7 +668,7 @@ describe("createTtlCache (FR-010)", () => {
     expect(c.size()).toBe(0);
   });
 
-  it("evicts the oldest entry past max (TC-033)", () => {
+  it("evicts the oldest entry past max (TC-043)", () => {
     const c = createTtlCache<number>({
       ttlMs: 1000,
       clock: { now: () => 0 },
@@ -713,7 +711,7 @@ describe("createPluginSearch (FR-010)", () => {
       ? res(npmBody(npmPkg({ links: {} })))
       : res(ghBody());
 
-  it("serves an identical search from cache with no fetch (TC-034)", async () => {
+  it("serves an identical search from cache with no fetch (TC-044)", async () => {
     let calls = 0;
     const http: HttpFetcher = async (url, init) => {
       calls++;
@@ -726,7 +724,7 @@ describe("createPluginSearch (FR-010)", () => {
     expect(calls).toBe(before);
   });
 
-  it("invalidate forces a re-fetch (TC-035)", async () => {
+  it("invalidate forces a re-fetch (TC-045)", async () => {
     let calls = 0;
     const http: HttpFetcher = async (url, init) => {
       calls++;
@@ -740,7 +738,7 @@ describe("createPluginSearch (FR-010)", () => {
     expect(calls).toBeGreaterThan(after1);
   });
 
-  it("resolves a late-bound github token per call (TC-036)", async () => {
+  it("resolves a late-bound github token per call (TC-046)", async () => {
     let token: string | undefined;
     const seen: (string | undefined)[] = [];
     const http: HttpFetcher = async (url, init) => {
@@ -762,7 +760,7 @@ describe("createPluginSearch (FR-010)", () => {
     expect(seen[1]).toBe("Bearer later");
   });
 
-  it("does not cache a response carrying errors (TC-051)", async () => {
+  it("does not cache a response carrying errors (TC-061)", async () => {
     let calls = 0;
     const http: HttpFetcher = async (url) => {
       calls++;
@@ -777,7 +775,7 @@ describe("createPluginSearch (FR-010)", () => {
     expect(calls).toBeGreaterThan(after1);
   });
 
-  it("keys verifier-presence and token-id distinctly (TC-052)", async () => {
+  it("keys verifier-presence and token-id distinctly (TC-062)", async () => {
     let calls = 0;
     const http: HttpFetcher = async (url) => {
       calls++;
@@ -838,7 +836,7 @@ describe("createPluginSearch (FR-010)", () => {
     expect(urls.some((u) => u.startsWith("https://deps-gh"))).toBe(true);
   });
 
-  it("keys distinct non-empty tokens to distinct cache entries (TC-055)", async () => {
+  it("keys distinct non-empty tokens to distinct cache entries (TC-065)", async () => {
     let token: string | undefined = "tokA";
     let calls = 0;
     const http: HttpFetcher = async (url, init) => {
@@ -863,7 +861,7 @@ describe("createPluginSearch (FR-010)", () => {
     expect(calls).toBe(afterB);
   });
 
-  it("bounds the cache by a default max, evicting the oldest entry (TC-056)", async () => {
+  it("bounds the cache by a default max, evicting the oldest entry (TC-066)", async () => {
     let calls = 0;
     const http: HttpFetcher = async (url, init) => {
       calls++;
@@ -879,7 +877,7 @@ describe("createPluginSearch (FR-010)", () => {
     expect(calls).toBe(afterEvicted);
   });
 
-  it("honors an explicit cacheMax override (TC-060)", async () => {
+  it("honors an explicit cacheMax override (TC-070)", async () => {
     let calls = 0;
     const http: HttpFetcher = async (url, init) => {
       calls++;
@@ -897,7 +895,7 @@ describe("createPluginSearch (FR-010)", () => {
     expect(calls).toBeGreaterThan(before);
   });
 
-  it("returns a distinct response object on a cache hit (TC-059)", async () => {
+  it("returns a distinct response object on a cache hit (TC-069)", async () => {
     const ps = createPluginSearch({ http: okHttp, clock: { now: () => 0 } });
     const first = await ps.search({ tag: "t" });
     const hit = await ps.search({ tag: "t" });
@@ -910,7 +908,7 @@ describe("createPluginSearch (FR-010)", () => {
 // ── FR-011: GitHub rate limit ────────────────────────────────────────────────
 
 describe("rate-limit surfacing + short-circuit (FR-011)", () => {
-  it("reads github rate-limit headers into rate.github (TC-037)", async () => {
+  it("reads github rate-limit headers into rate.github (TC-047)", async () => {
     const http: HttpFetcher = async (url) =>
       url.includes("/search/repositories")
         ? res(ghBody(), { headers: RL("30", "29", "12345") })
@@ -919,7 +917,7 @@ describe("rate-limit surfacing + short-circuit (FR-011)", () => {
     expect(r.rate.github).toEqual({ limit: 30, remaining: 29, resetAt: 12345 });
   });
 
-  it("treats non-finite rate-limit headers as no rate info (TC-058)", async () => {
+  it("treats non-finite rate-limit headers as no rate info (TC-068)", async () => {
     const http: HttpFetcher = async (url) =>
       url.includes("/search/repositories")
         ? res(ghBody(), { headers: RL("oops", "29", "12345") })
@@ -928,7 +926,7 @@ describe("rate-limit surfacing + short-circuit (FR-011)", () => {
     expect(r.rate.github).toBeUndefined();
   });
 
-  it("surfaces an exhausted github window as a rateLimited error (TC-038)", async () => {
+  it("surfaces an exhausted github window as a rateLimited error (TC-048)", async () => {
     const http: HttpFetcher = async (url) =>
       url.includes("/search/repositories")
         ? res({}, { status: 403, headers: RL("60", "0", "777") })
@@ -943,7 +941,7 @@ describe("rate-limit surfacing + short-circuit (FR-011)", () => {
     expect(r.rate.github?.remaining).toBe(0);
   });
 
-  it("skips github while the window is exhausted (TC-039)", async () => {
+  it("skips github while the window is exhausted (TC-049)", async () => {
     let t = 0;
     let ghCalls = 0;
     const http: HttpFetcher = async (url) => {
@@ -965,7 +963,7 @@ describe("rate-limit surfacing + short-circuit (FR-011)", () => {
     expect(ps.lastRate().github?.remaining).toBe(0);
   });
 
-  it("resumes github once the clock passes resetAt (TC-040)", async () => {
+  it("resumes github once the clock passes resetAt (TC-050)", async () => {
     let t = 0;
     let ghCalls = 0;
     const http: HttpFetcher = async (url) => {
@@ -984,7 +982,7 @@ describe("rate-limit surfacing + short-circuit (FR-011)", () => {
     expect(ghCalls).toBe(2);
   });
 
-  it("does not short-circuit on the first call (TC-053)", async () => {
+  it("does not short-circuit on the first call (TC-063)", async () => {
     let ghCalls = 0;
     const http: HttpFetcher = async (url) => {
       if (url.includes("/search/repositories")) {
@@ -1003,12 +1001,12 @@ describe("rate-limit surfacing + short-circuit (FR-011)", () => {
 // ── FR-012 + defaults ────────────────────────────────────────────────────────
 
 describe("sourceToInstallInput (FR-012)", () => {
-  it("renders npm and github sources (TC-041)", () => {
+  it("renders npm and github sources (TC-051)", () => {
     expect(sourceToInstallInput({ type: "npm", package: "@s/p" })).toBe("@s/p");
     expect(sourceToInstallInput({ type: "github", repo: "o/r" })).toBe("o/r");
   });
 
-  it("renders git, url, git-subdir and path sources (TC-042)", () => {
+  it("renders git, url, git-subdir and path sources (TC-052)", () => {
     expect(sourceToInstallInput({ type: "git", url: "https://g/x.git" })).toBe(
       "https://g/x.git",
     );

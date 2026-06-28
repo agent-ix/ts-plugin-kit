@@ -68,21 +68,21 @@ capability-attachment steps are specified under Behavior below.
 
 | ID          | Criteria                                                                                                                                                                        | Verification  |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| FR-009-AC-1 | With a verifier supplied, a candidate whose `verify` returns an object survives with `verified:true` and the returned `capabilities` attached.                                  | Test (TC-027) |
-| FR-009-AC-2 | A candidate whose `verify` returns `null` is removed from the results.                                                                                                          | Test (TC-028) |
-| FR-009-AC-3 | A candidate whose manifest fetch returns `404` is dropped as incompatible with no error recorded, and `verify` is not called.                                                   | Test (TC-029) |
-| FR-009-AC-4 | The npm manifest is fetched from an `unpkg.com/{package}/{manifestPath}` URL and the GitHub manifest from a `raw.githubusercontent.com/{owner}/{repo}/HEAD/{manifestPath}` URL. | Test (TC-030) |
-| FR-009-AC-5 | With no verifier supplied, results are returned unfiltered with `verified` unset and no manifest fetch occurs.                                                                  | Test (TC-031) |
-| FR-009-AC-6 | A manifest fetch that rejects or returns a non-`404` non-OK status drops the candidate as unverified and records a transient `SearchBackendError`.                              | Test (TC-048) |
-| FR-009-AC-7 | A `verify` callback that throws drops only that candidate; no error escapes `searchPlugins` and other candidates are unaffected.                                                | Test (TC-049) |
-| FR-009-AC-8 | No more than six manifest fetches are in flight simultaneously for a candidate set larger than six.                                                                             | Test (TC-050) |
-| FR-009-AC-9 | A candidate whose registry-supplied name contains a `..` path segment or a control character is dropped before any manifest fetch is issued.                                    | Test (TC-057) |
+| FR-009-AC-1 | With a verifier supplied, a candidate whose `verify` returns an object survives with `verified:true` and the returned `capabilities` attached.                                  | Test (TC-037) |
+| FR-009-AC-2 | A candidate whose `verify` returns `null` is removed from the results.                                                                                                          | Test (TC-038) |
+| FR-009-AC-3 | A candidate whose manifest fetch returns `404` is dropped as incompatible with no error recorded, and `verify` is not called.                                                   | Test (TC-039) |
+| FR-009-AC-4 | The npm manifest is fetched from an `unpkg.com/{package}/{manifestPath}` URL and the GitHub manifest from a `raw.githubusercontent.com/{owner}/{repo}/HEAD/{manifestPath}` URL. | Test (TC-040) |
+| FR-009-AC-5 | With no verifier supplied, results are returned unfiltered with `verified` unset and no manifest fetch occurs.                                                                  | Test (TC-041) |
+| FR-009-AC-6 | A manifest fetch that rejects or returns a non-`404` non-OK status drops the candidate as unverified and records a transient `SearchBackendError`.                              | Test (TC-058) |
+| FR-009-AC-7 | A `verify` callback that throws drops only that candidate; no error escapes `searchPlugins` and other candidates are unaffected.                                                | Test (TC-059) |
+| FR-009-AC-8 | No more than six manifest fetches are in flight simultaneously for a candidate set larger than six.                                                                             | Test (TC-060) |
+| FR-009-AC-9 | A candidate whose registry-supplied name contains a `..` path segment or a control character is dropped before any manifest fetch is issued.                                    | Test (TC-067) |
 
 ## Constraints
 
 | ID           | Constraint                                                                                                                                                         | Type     | Validation    |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------------- |
-| FR-009-CON-1 | The library SHALL NOT interpolate a registry-supplied name containing a `..` path segment or a control character into a manifest URL; such a candidate is dropped. | Security | Test (TC-057) |
+| FR-009-CON-1 | The library SHALL NOT interpolate a registry-supplied name containing a `..` path segment or a control character into a manifest URL; such a candidate is dropped. | Security | Test (TC-067) |
 
 ## Dependencies
 

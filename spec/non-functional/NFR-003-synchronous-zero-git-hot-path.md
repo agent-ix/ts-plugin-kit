@@ -15,9 +15,11 @@ relationships:
 ## Statement
 
 The **resolution surface** — `resolveSource`, `installEntry`, and `reconcile`
-(`resolve.ts` / `install.ts` / `reconcile.ts`) — SHALL be **synchronous**, with the
-`git` subprocess (via `GitRunner`) as its only external side effect, and SHALL NOT
-introduce async/Promise APIs or non-git network calls. A `lazy` reconcile of an
+(`resolve.ts` / `install.ts` / `reconcile.ts`) — SHALL be **synchronous**, with a
+per-source package-manager subprocess — `git` (via `GitRunner`) and, for npm
+sources, `npm pack` + `tar` (via `NpmFetcher`) — as its only external side effect,
+and SHALL NOT introduce async/Promise APIs or any other network calls. A `lazy`
+reconcile of an
 already-settled manifest SHALL perform **zero** git invocations so it is safe on a
 per-CLI-invocation hot path. The separately-specified **discovery surface**
 (`search.ts`) is the only asynchronous, networked part of the library and is bounded
@@ -27,11 +29,11 @@ constraint.
 
 ## Measurement and Evaluation
 
-| Metric                                                        | Target | Threshold | Method     |
-| ------------------------------------------------------------- | ------ | --------- | ---------- |
-| Git invocations on a 2nd lazy reconcile of a settled manifest | 0      | 0         | Test       |
-| Promise-returning functions on the resolution surface         | 0      | 0         | Inspection |
-| Non-git external side effects in `resolveSource`              | 0      | 0         | Analysis   |
+| Metric                                                                 | Target | Threshold | Method     |
+| ---------------------------------------------------------------------- | ------ | --------- | ---------- |
+| Git invocations on a 2nd lazy reconcile of a settled manifest          | 0      | 0         | Test       |
+| Promise-returning functions on the resolution surface                  | 0      | 0         | Inspection |
+| External side effects in `resolveSource` beyond `git`/`npm pack`+`tar` | 0      | 0         | Analysis   |
 
 ## Verification
 
@@ -41,6 +43,9 @@ constraint.
   reconcile function is synchronous (no `async`, no `Promise<...>` return types). The
   discovery exports (`searchPlugins`, `createPluginSearch`) are intentionally async
   and out of scope here (NFR-005).
-- `resolveSource` performs only filesystem reads/dir creation and the injected
-  `git` subprocess; with an injected fake `GitRunner` it resolves with no real git
-  ([FR-004-AC-7](../functional/FR-004-source-resolution.md)).
+- `resolveSource` performs only filesystem reads/dir creation and the per-source
+  package-manager subprocess (`git`; or `npm pack` + `tar` for npm sources); with
+  an injected fake `GitRunner` it resolves git sources with no real git
+  ([FR-004-AC-7](../functional/FR-004-source-resolution.md)), and with an injected
+  fake `NpmFetcher` it resolves npm sources with no real `npm`/network
+  ([FR-004-AC-8](../functional/FR-004-source-resolution.md)).

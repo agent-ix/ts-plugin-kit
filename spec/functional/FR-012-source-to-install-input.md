@@ -48,8 +48,8 @@ the rendered string.
 
 | ID          | Criteria                                                                                     | Verification  |
 | ----------- | -------------------------------------------------------------------------------------------- | ------------- |
-| FR-012-AC-1 | An `npm` source renders to its `package`, and a `github` source renders to its `owner/repo`. | Test (TC-041) |
-| FR-012-AC-2 | `git`/`url` sources render to their `url`, and a `path` source renders to its `path`.        | Test (TC-042) |
+| FR-012-AC-1 | An `npm` source renders to its `package`, and a `github` source renders to its `owner/repo`. | Test (TC-051) |
+| FR-012-AC-2 | `git`/`url` sources render to their `url`, and a `path` source renders to its `path`.        | Test (TC-052) |
 
 ## Dependencies
 

@@ -97,14 +97,37 @@ offline (no registry), which is how the default fetcher is integration-tested
 (FR-004-AC-10). An injected `NpmFetcher` replaces the default so tests run with no
 real `npm`/network (FR-004-AC-8, -AC-9).
 
+**Argument-injection guard.** Source-descriptor fields flow into the `git` argv:
+`repo`/`url` reach `git clone`/`git fetch` (the clone URL), `git-subdir.path`
+reaches `git sparse-checkout set <path>`, and `sha`/`ref` reach
+`git checkout --detach <wanted>`. `execFileSync` avoids a _shell_, but `git`
+itself treats a leading-`-` argument as an **option** — e.g. a `ref` of
+`--upload-pack=<cmd>`, a `repo` of `--output=…`, or a `path` of `--stdin` becomes
+a flag (a second-order command-line injection,
+`js/second-order-command-line-injection`). Because `resolveSource` calls
+`normalizeSource` **before** any `git` invocation, the guard that
+`normalizeSource` ([FR-001](./FR-001-typed-source-union.md)) applies to these
+fields (reject a value whose **trimmed** form begins with `-`) is sufficient:
+`github.repo`, `git.url`, `git-subdir.url`, `git-subdir.path`, and `url.url`, plus
+the optional `ref`/`sha` on every git variant, are rejected with `SourceError`
+before they can reach the argv (FR-004-CON-5). The guard is on the **trimmed**
+value because `toGitUrl` does `raw.trim()` before the URL reaches the argv: a raw
+`startsWith("-")` check would let a leading-whitespace-then-dash payload (e.g.
+`" --upload-pack=… ext://x"`, which `toGitUrl` also passes through unwrapped on
+its `://`) slip past the guard yet trim to an option at the argv. Guarding the
+trimmed value makes the value that is validated the value that actually reaches
+the argv. Rejection is preferred over an argv `--` separator because
+`git checkout` does not accept `--` cleanly before a ref.
+
 ## Constraints
 
-| ID           | Constraint                                                                                                                                                                                                                                                                                    | Type          | Validation    |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------- |
-| FR-004-CON-1 | The only side effect is the per-source package-manager subprocess (`git` for git sources; `npm pack` + `tar` for npm sources); resolution performs no other network or I/O beyond filesystem reads/dir creation.                                                                              | architectural | Test (TC-011) |
-| FR-004-CON-2 | The clone is blobless and no-checkout (`--filter=blob:none --no-checkout`); subdir sources sparse-checkout only the requested path.                                                                                                                                                           | performance   | Test (TC-008) |
-| FR-004-CON-3 | `normalizeSource` rejects an `npm` `package` beginning with `-`, so it cannot reach `npm pack` as a CLI flag (second-order command-line-injection guard).                                                                                                                                     | security      | Test (TC-026) |
-| FR-004-CON-4 | When `npm pack --json` output contains no metadata array (no array at all, an empty array, or an array whose first element is not an object with a string `filename`), `parseNpmPackJson` throws a descriptive `SourceError` rather than returning garbage or a confusing downstream failure. | robustness    | Test (TC-027) |
+| ID           | Constraint                                                                                                                                                                                                                                                                                                                                                                                                | Type          | Validation                    |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ----------------------------- |
+| FR-004-CON-1 | The only side effect is the per-source package-manager subprocess (`git` for git sources; `npm pack` + `tar` for npm sources); resolution performs no other network or I/O beyond filesystem reads/dir creation.                                                                                                                                                                                          | architectural | Test (TC-011)                 |
+| FR-004-CON-2 | The clone is blobless and no-checkout (`--filter=blob:none --no-checkout`); subdir sources sparse-checkout only the requested path.                                                                                                                                                                                                                                                                       | performance   | Test (TC-008)                 |
+| FR-004-CON-3 | `normalizeSource` rejects an `npm` `package` beginning with `-`, so it cannot reach `npm pack` as a CLI flag (second-order command-line-injection guard).                                                                                                                                                                                                                                                 | security      | Test (TC-026)                 |
+| FR-004-CON-4 | When `npm pack --json` output contains no metadata array (no array at all, an empty array, or an array whose first element is not an object with a string `filename`), `parseNpmPackJson` throws a descriptive `SourceError` rather than returning garbage or a confusing downstream failure.                                                                                                             | robustness    | Test (TC-027)                 |
+| FR-004-CON-5 | `normalizeSource` rejects a value whose **trimmed** form is option-like (begins with `-`) for `github.repo`, `git.url`, `git-subdir.url`, `git-subdir.path`, `url.url`, or any git-variant `ref`/`sha`, so it cannot reach the `git` argv as a CLI flag — including a leading-whitespace-then-dash payload that `toGitUrl` would otherwise trim to an option (second-order command-line-injection guard). | security      | Test (TC-029, TC-030, TC-031) |
 
 ## Acceptance Criteria
 
@@ -123,6 +146,9 @@ real `npm`/network (FR-004-AC-8, -AC-9).
 | FR-004-AC-11 | `npmPackArgs` builds the correct argv for a pinned spec (`<pkg>@<version>`), an unpinned spec (`<pkg>`), and includes `--registry <registry>` when a registry is supplied.                                                                                                                                                                                                              | Test (TC-025) |
 | FR-004-AC-12 | `parseNpmPackJson` robustly parses the `npm pack --json` metadata: it scans past lifecycle-script stdout noise (including stray `[` brackets, empty arrays, and non-metadata noise arrays) and returns the first array whose first element is an npm-pack metadata object (an object with a string `filename`); on no-array/empty/invalid output it throws a descriptive `SourceError`. | Test (TC-027) |
 | FR-004-AC-13 | An **unpinned** (or range) `npm` re-fetch clears any prior cached tarball + extraction before re-extracting, so the npm cache dir does not accumulate stale tarball artifacts across "latest" re-fetches.                                                                                                                                                                               | Test (TC-028) |
+| FR-004-AC-14 | An option-like (leading `-`) `repo`, `url`, `ref`, or `sha` on a git source throws `SourceError` ("must not begin with `-`") from `normalizeSource`, before any `git` invocation.                                                                                                                                                                                                       | Test (TC-029) |
+| FR-004-AC-15 | A leading-whitespace-then-dash `repo`/`url` (e.g. `" --upload-pack=… ext://x"`), which `toGitUrl` would trim to an option at the argv, throws `SourceError` from `normalizeSource` — the guard validates the trimmed value.                                                                                                                                                             | Test (TC-030) |
+| FR-004-AC-16 | An option-like (leading `-`) `git-subdir.path` (e.g. `"--stdin"`, `"-X"`), which would reach `git sparse-checkout set <path>` as a flag, throws `SourceError` from `normalizeSource`.                                                                                                                                                                                                   | Test (TC-031) |
 
 ## Dependencies
 

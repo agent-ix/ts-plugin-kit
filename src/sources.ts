@@ -50,15 +50,34 @@ function req(value: unknown, field: string): string {
 /**
  * Like {@link req}, but also rejects an option-like value (leading `-`). Source
  * fields that flow into a `git`/`npm` argv must not be interpretable as a CLI
- * flag — e.g. a package named `-x` would become an `npm pack` option (a
- * second-order command-line injection), so it is rejected up front.
+ * flag — e.g. a package named `-x` would become an `npm pack` option, or a `ref`
+ * of `--upload-pack=<cmd>` / a `repo` of `--output=…` would become a `git`
+ * option (a second-order command-line injection), so it is rejected up front,
+ * before any subprocess invocation.
+ *
+ * The check is on the **trimmed** value: `toGitUrl` does `raw.trim()` before the
+ * value reaches `git clone`/`git fetch`, so a leading-whitespace-then-dash
+ * payload (e.g. `" --upload-pack=…"`) would otherwise pass the raw guard yet
+ * trim to an option at the argv. Guarding the trimmed value makes the value that
+ * is validated the value that actually reaches the argv.
  */
 function reqArg(value: unknown, field: string): string {
   const v = req(value, field);
-  if (v.startsWith("-")) {
+  if (v.trim().startsWith("-")) {
     throw new SourceError(`source field "${field}" must not begin with "-"`);
   }
   return v;
+}
+
+/**
+ * Like {@link reqArg}, but for an optional field (`ref`/`sha`): `undefined`
+ * passes through, but any present value must be a non-empty, non-option-like
+ * string. `git checkout` does not accept a `--` separator cleanly before a ref,
+ * so an option-like ref/sha is rejected rather than escaped.
+ */
+function optArg(value: unknown, field: string): void {
+  if (value === undefined) return;
+  reqArg(value, field);
 }
 
 /** Validate a source descriptor, throwing {@link SourceError} on malformed input. */
@@ -68,17 +87,25 @@ export function normalizeSource(source: Source): Source {
   }
   switch (source.type) {
     case "github":
-      req(source.repo, "repo");
+      reqArg(source.repo, "repo");
+      optArg(source.ref, "ref");
+      optArg(source.sha, "sha");
       return source;
     case "git":
-      req(source.url, "url");
+      reqArg(source.url, "url");
+      optArg(source.ref, "ref");
+      optArg(source.sha, "sha");
       return source;
     case "git-subdir":
-      req(source.url, "url");
-      req(source.path, "path");
+      reqArg(source.url, "url");
+      reqArg(source.path, "path");
+      optArg(source.ref, "ref");
+      optArg(source.sha, "sha");
       return source;
     case "url":
-      req(source.url, "url");
+      reqArg(source.url, "url");
+      optArg(source.ref, "ref");
+      optArg(source.sha, "sha");
       return source;
     case "path":
       req(source.path, "path");

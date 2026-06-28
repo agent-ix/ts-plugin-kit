@@ -10,6 +10,9 @@ relationships:
   - target: "ix://agent-ix/ts-plugin-kit/spec/functional/FR-003"
     type: "constrains"
     cardinality: "1:1"
+  - target: "ix://agent-ix/ts-plugin-kit/spec/functional/FR-008"
+    type: "constrains"
+    cardinality: "1:1"
 ---
 
 ## Statement
@@ -35,3 +38,7 @@ is delegated to the host ([FR-003](../functional/FR-003-manifest-validation.md))
   built-in or a sibling `./*.js` module — no third-party package.
 - The build (`vite.config.ts`) externalizes only `node:` built-ins and optional
   peer packages that the library does not actually import at runtime.
+- The discovery surface ([FR-008](../functional/FR-008-candidate-search.md)) reaches
+  the network through the Node global `fetch` referenced by `defaultHttpFetcher`, not
+  an imported HTTP client, so it adds no runtime dependency; the built-ins list above
+  is not exhaustive of the network surface.

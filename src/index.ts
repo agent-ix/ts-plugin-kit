@@ -44,3 +44,27 @@ export {
   type ReconcileResult,
   reconcile,
 } from "./reconcile.js";
+
+export {
+  type HttpRequestInit,
+  type HttpResponse,
+  type HttpFetcher,
+  type SearchBackend,
+  type PluginSearchResult,
+  type RateLimit,
+  type SearchBackendError,
+  type SearchResponse,
+  type CandidateVerifier,
+  type SearchOptions,
+  type Clock,
+  type TtlCacheOptions,
+  type TtlCache,
+  type PluginSearchDeps,
+  type PluginSearch,
+  defaultHttpFetcher,
+  searchPlugins,
+  systemClock,
+  createTtlCache,
+  createPluginSearch,
+  sourceToInstallInput,
+} from "./search.js";

@@ -10,3 +10,4 @@ description: "Index of artifacts in this directory."
 
 - [US-001: Reconcile a Default Plugin Set](./US-001-reconcile-default-set.md)
 - [US-002: Install an Ad-Hoc Source and Derive Its Name](./US-002-install-ad-hoc-source.md)
+- [US-003: Discover and Verify Publishable Plugins by Tag](./US-003-discover-plugins-by-tag.md)

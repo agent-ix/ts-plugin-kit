@@ -55,9 +55,12 @@ This document is the **top-level requirements artifact** for the repository.
 
 ### 2.1 In Scope
 
-Scope: **A zero-dependency, synchronous, framework-agnostic toolkit for resolving
-typed plugin sources, pinning them by ref/sha, recording installs in a registry,
-and reconciling a manifest's default set into a host-owned target directory.**
+Scope: **A zero-dependency, framework-agnostic toolkit for resolving typed plugin
+sources, pinning them by ref/sha, recording installs in a registry, reconciling a
+manifest's default set into a host-owned target directory, and discovering and
+verifying candidate plugins published under a host-chosen tag.** The resolution and
+reconcile surface is synchronous (git as its sole side effect); the discovery
+surface is asynchronous network I/O confined behind a single injectable transport.
 
 This specification governs:
 
@@ -85,6 +88,12 @@ pack`s + extracts the tarball under `<cacheRoot>/npm/<key>` and pins the resolve
   only what is missing or repinned, **zero git when settled**) and a `sync` path
   (re-resolve all, detect drift), returning `{installed, unchanged, updated,
 skipped}`; `defaultEnabled:false` entries are skipped ([FR-007](./functional/FR-007-reconcile.md)).
+- **Plugin discovery** — `searchPlugins` / `createPluginSearch`: candidate search
+  across npm `keywords:<tag>` and GitHub `topic:<tag>` through an injectable
+  `HttpFetcher`, host-driven compatibility verification against a CDN-fetched
+  manifest, a TTL cache with an injectable clock, GitHub rate-limit surfacing with
+  a short-circuit, and `sourceToInstallInput` to feed a host install field
+  ([FR-008](./functional/FR-008-candidate-search.md)–[FR-012](./functional/FR-012-source-to-install-input.md)).
 
 ### 2.2 Out of Scope
 
@@ -104,7 +113,18 @@ This specification does not govern:
 - **The oclif / ix-cli-core adapter.** Cache-root derivation, the oclif
   `plugins:install` bridge, and runtime wiring live in
   `ix://agent-ix/ix-cli-core` (its FR-019), not here.
-- **Asynchronous or networked transport** beyond the synchronous `git` subprocess.
+- **Asynchronous or networked transport on the resolution surface.** Resolution,
+  install, and reconcile remain synchronous with `git` as the sole side effect; the
+  one networked surface is discovery (`search.ts`), confined behind the injectable
+  `HttpFetcher` ([NFR-005](./non-functional/NFR-005-injectable-discovery-transport.md)).
+- **Manifest parsing and compatibility semantics during discovery.** The host
+  supplies the discriminator `tag` and a `CandidateVerifier` whose callback parses
+  and judges each manifest; the library fetches raw manifest text but never parses it
+  ([FR-009](./functional/FR-009-compatibility-verification.md)).
+- **Credential storage, retry/backoff/sleep/debounce timing, and publishing or
+  topic-tagging of plugin repositories.** Discovery accepts a `githubToken` but never
+  persists it, surfaces rate limits without sleeping or retrying, and does not publish
+  packages or tag repos — those are host concerns ([FR-011](./functional/FR-011-github-rate-limit.md)).
 
 ---
 
@@ -114,9 +134,12 @@ This specification does not govern:
 
 `@agent-ix/ts-plugin-kit` is a single publishable TypeScript library (npm package
 `@agent-ix/ts-plugin-kit`) with **zero runtime dependencies**. It exposes the
-building blocks below as pure ES-module functions; every operation is synchronous
-and the only side effect is a per-source package-manager subprocess (via
-`execFileSync`): `git` for git sources, and `npm pack` + `tar` for `npm` sources.
+building blocks below as ES-module functions. The resolution/install/reconcile
+surface is synchronous with a per-source package-manager subprocess (via
+`execFileSync`) as its only side effect — `git` for git sources, and `npm pack` +
+`tar` for `npm` sources; the discovery surface (`search.ts`) is asynchronous and
+performs all network I/O through the injectable `HttpFetcher` (default: the Node
+global `fetch`, so no dependency is added).
 
 | Module         | Responsibility                                                                                                                         |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
@@ -126,6 +149,7 @@ and the only side effect is a per-source package-manager subprocess (via
 | `registry.ts`  | `InstalledPlugin`, `PluginRegistry`, `readRegistry`, `writeRegistry`, `upsertPlugin`                                                   |
 | `install.ts`   | `InstallOptions`, `installEntry`                                                                                                       |
 | `reconcile.ts` | `ReconcileOptions`, `ReconcileResult`, `reconcile`                                                                                     |
+| `search.ts`    | `HttpFetcher`, `searchPlugins`, `createTtlCache`, `createPluginSearch`, `sourceToInstallInput`, discovery result/option types          |
 | `index.ts`     | The public barrel re-exporting the above                                                                                               |
 
 ### 3.2 Intended Users
@@ -171,13 +195,17 @@ installing an ad-hoc, unnamed source.
 
 Testable behavioral contracts for source typing/validation, URL shorthand
 expansion, manifest validation, source resolution, the install registry,
-single-entry install, and default-set reconciliation.
+single-entry install, default-set reconciliation, and plugin discovery (candidate
+search, host-driven compatibility verification, TTL caching, GitHub rate-limit
+surfacing, and source-to-install-string rendering).
 
 ### 5.4 Non-Functional Requirements (`NFR-XXX`)
 
 Quality constraints: zero runtime dependencies, 100% enforced test coverage,
-synchronous git-as-sole-side-effect with a zero-git settled hot path, and
-cache/target directory isolation.
+synchronous git-as-sole-side-effect on the resolution surface with a zero-git
+settled hot path, cache/target directory isolation, and an injectable,
+dependency-free discovery transport (NFR-005) that keeps the one async/networked
+surface offline-testable.
 
 ---
 
@@ -204,6 +232,7 @@ sequence (no classifier prefix).
 | [StR-003](./stakeholder/StR-003-fast-reconciliation.md)               | Fast Per-Invocation Reconciliation                           |
 | [US-001](./usecase/US-001-reconcile-default-set.md)                   | Reconcile a Default Plugin Set                               |
 | [US-002](./usecase/US-002-install-ad-hoc-source.md)                   | Install an Ad-Hoc Source and Derive Its Name                 |
+| [US-003](./usecase/US-003-discover-plugins-by-tag.md)                 | Discover and Verify Publishable Plugins by Tag               |
 | [FR-001](./functional/FR-001-typed-source-union.md)                   | Typed Source Union and Structural Validation                 |
 | [FR-002](./functional/FR-002-git-url-shorthand.md)                    | Git URL Shorthand Expansion                                  |
 | [FR-003](./functional/FR-003-manifest-validation.md)                  | Marketplace Manifest Validation                              |
@@ -211,10 +240,16 @@ sequence (no classifier prefix).
 | [FR-005](./functional/FR-005-install-registry.md)                     | Install Registry: Read, Atomic Write, and Upsert             |
 | [FR-006](./functional/FR-006-single-entry-install.md)                 | Single-Entry Install and Materialization                     |
 | [FR-007](./functional/FR-007-reconcile.md)                            | Default-Set Reconciliation (Lazy and Sync)                   |
+| [FR-008](./functional/FR-008-candidate-search.md)                     | Candidate Plugin Search Across npm and GitHub                |
+| [FR-009](./functional/FR-009-compatibility-verification.md)           | Host-Driven Compatibility Verification of Candidates         |
+| [FR-010](./functional/FR-010-discovery-cache.md)                      | TTL-Cached Discovery with an Injectable Clock                |
+| [FR-011](./functional/FR-011-github-rate-limit.md)                    | GitHub Rate-Limit Surfacing and Short-Circuit                |
+| [FR-012](./functional/FR-012-source-to-install-input.md)              | Render a Source as a Host Install-Input String               |
 | [NFR-001](./non-functional/NFR-001-zero-runtime-dependencies.md)      | Zero Runtime Dependencies                                    |
 | [NFR-002](./non-functional/NFR-002-full-test-coverage.md)             | One-Hundred-Percent Enforced Test Coverage                   |
 | [NFR-003](./non-functional/NFR-003-synchronous-zero-git-hot-path.md)  | Synchronous Resolution with a Zero-Git Settled Hot Path      |
 | [NFR-004](./non-functional/NFR-004-cache-target-isolation.md)         | Cache and Target Directory Isolation                         |
+| [NFR-005](./non-functional/NFR-005-injectable-discovery-transport.md) | Injectable, Dependency-Free Discovery Transport              |
 
 ---
 
@@ -342,6 +377,11 @@ Bidirectional traceability SHALL be maintained between:
   reconcile including the zero-git settled path.
 - An injectable `GitRunner` lets resolution tests run without a real network and
   assert the exact git argv.
+- Discovery is verified in `tests/search.test.ts` with an injected fake
+  `HttpFetcher` and `Clock`, so the suite exercises candidate search, compatibility
+  verification, TTL caching, and GitHub rate-limit handling fully offline and
+  deterministically — no real npm, GitHub, unpkg, or raw.githubusercontent access
+  ([NFR-005](./non-functional/NFR-005-injectable-discovery-transport.md)).
 - Coverage is gated at 100% (branches, functions, lines, statements) in
   `vite.config.ts` ([NFR-002](./non-functional/NFR-002-full-test-coverage.md)).
 

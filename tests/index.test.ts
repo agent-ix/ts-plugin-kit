@@ -194,6 +194,53 @@ describe("normalizeSource", () => {
       normalizeSource({ type: "url", url: "u", sha: "-s" } as Source),
     ).toThrow(SourceError);
   });
+
+  // TC-023 (F1): the argv guard must validate the value that actually reaches the
+  // `git` argv. `toGitUrl` trims its input (and passes a `://` value through
+  // unwrapped), so a leading-whitespace-then-dash payload (e.g.
+  // `" --upload-pack=touch /tmp/pwned ext://x"`) would slip past a raw
+  // `startsWith("-")` check yet trim to an *option* at the argv — a second-order
+  // command-line injection. The guard must reject the TRIMMED value.
+  test("rejects leading-whitespace option-like repo/url (trim bypass)", () => {
+    const payload = " --upload-pack=touch /tmp/pwned ext://x";
+    expect(() =>
+      normalizeSource({ type: "github", repo: payload } as Source),
+    ).toThrow(/must not begin with "-"/);
+    expect(() =>
+      normalizeSource({ type: "git", url: payload } as Source),
+    ).toThrow(/must not begin with "-"/);
+    expect(() =>
+      normalizeSource({
+        type: "git-subdir",
+        url: payload,
+        path: "p",
+      } as Source),
+    ).toThrow(/must not begin with "-"/);
+    expect(() =>
+      normalizeSource({ type: "url", url: payload } as Source),
+    ).toThrow(/must not begin with "-"/);
+  });
+
+  // TC-024 (F2): `git-subdir.path` flows into `git sparse-checkout set <path>`
+  // and was only checked for non-emptiness (`req`), so an option-like value
+  // (`--stdin`, `-X`) reached the argv as a flag. Guard it like the other argv
+  // fields.
+  test("rejects option-like git-subdir path", () => {
+    expect(() =>
+      normalizeSource({
+        type: "git-subdir",
+        url: "u",
+        path: "--stdin",
+      } as Source),
+    ).toThrow(/must not begin with "-"/);
+    expect(() =>
+      normalizeSource({
+        type: "git-subdir",
+        url: "u",
+        path: "-X",
+      } as Source),
+    ).toThrow(/must not begin with "-"/);
+  });
 });
 
 test("toGitUrl expands shorthand and passes through URLs", () => {

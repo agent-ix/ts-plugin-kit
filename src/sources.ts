@@ -53,10 +53,16 @@ function req(value: unknown, field: string): string {
  * e.g. a `ref` of `--upload-pack=<cmd>` or a `repo` of `--output=…` would become
  * a `git` option (a second-order command-line injection), so it is rejected up
  * front, before any git invocation.
+ *
+ * The check is on the **trimmed** value: `toGitUrl` does `raw.trim()` before the
+ * value reaches `git clone`/`git fetch`, so a leading-whitespace-then-dash
+ * payload (e.g. `" --upload-pack=…"`) would otherwise pass the raw guard yet
+ * trim to an option at the argv. Guarding the trimmed value makes the value that
+ * is validated the value that actually reaches the argv.
  */
 function reqArg(value: unknown, field: string): string {
   const v = req(value, field);
-  if (v.startsWith("-")) {
+  if (v.trim().startsWith("-")) {
     throw new SourceError(`source field "${field}" must not begin with "-"`);
   }
   return v;
@@ -91,7 +97,7 @@ export function normalizeSource(source: Source): Source {
       return source;
     case "git-subdir":
       reqArg(source.url, "url");
-      req(source.path, "path");
+      reqArg(source.path, "path");
       optArg(source.ref, "ref");
       optArg(source.sha, "sha");
       return source;

@@ -100,6 +100,8 @@ partial clones work offline.
 | FR-004         | CON-1: git is the sole side effect                                  | TC-011 — `resolveSource › "github source + injected runner needs no real git"`                                         | ✅ Unit (fake)  |
 | FR-004         | CON-2: blobless + sparse (subdir only)                              | TC-008 — `resolveSource › "git-subdir sparse-checks out only the subdir at a tag"`                                     | ✅ Unit (git)   |
 | FR-004         | AC-8 / CON-3: option-like git argv field rejected (injection guard) | TC-022 — `normalizeSource › "rejects option-like git argv fields (injection guard)"`                                   | ✅ Unit         |
+| FR-004         | AC-9 / CON-3: leading-whitespace trim-bypass repo/url rejected      | TC-023 — `normalizeSource › "rejects leading-whitespace option-like repo/url (trim bypass)"`                           | ✅ Unit         |
+| FR-004         | AC-10 / CON-3: option-like `git-subdir.path` rejected               | TC-024 — `normalizeSource › "rejects option-like git-subdir path"`                                                     | ✅ Unit         |
 | FR-005         | AC-1: missing / shape-invalid (`{}`) registry read as empty         | TC-012 — `registry › "missing and malformed files read as empty"`                                                      | ✅ Unit         |
 | FR-005         | AC-2: atomic write + nested-dir creation round-trips                | TC-013 — `registry › "write is atomic and round-trips; upsert replaces by name"`                                       | ✅ Unit         |
 | FR-005         | AC-3: upsert replaces by name (count stays 1)                       | TC-013 — `registry › "write is atomic and round-trips; upsert replaces by name"`                                       | ✅ Unit         |
@@ -152,30 +154,36 @@ partial clones work offline.
 | TC-020  | reconcile lazy re-materializes vanished target                  | Unit (git)  | P1       | FR-007-AC-4                                     | ✅     |
 | TC-021  | reconcile lazy sha pin unchanged/updated                        | Unit (git)  | P0       | FR-007-AC-5                                     | ✅     |
 | TC-022  | normalizeSource rejects option-like git argv fields (`-x`)      | Unit        | P0       | FR-004-AC-8, -CON-3                             | ✅     |
+| TC-023  | normalizeSource rejects leading-ws trim-bypass repo/url         | Unit        | P0       | FR-004-AC-9, -CON-3                             | ✅     |
+| TC-024  | normalizeSource rejects option-like `git-subdir.path`           | Unit        | P0       | FR-004-AC-10, -CON-3                            | ✅     |
 
 ---
 
 ## Constraint Boundary Tests
 
-| Constraint   | Boundary / Case             | Test Value                                                      | Test Case | Expected                                                     |
-| ------------ | --------------------------- | --------------------------------------------------------------- | --------- | ------------------------------------------------------------ |
-| FR-004-CON-1 | git is the sole side effect | injected fake `GitRunner`                                       | TC-011    | resolves with no real git; argv[0]=`clone`                   |
-| FR-004-CON-2 | blobless + sparse           | `git-subdir` at `v0.2.0`                                        | TC-008    | only the subdir present; tag sha resolved                    |
-| FR-004-CON-3 | option-like git argv field  | `repo`/`url`/`ref`/`sha` = `-x` (e.g. `ref: "--upload-pack=…"`) | TC-022    | `SourceError` "must not begin with `-`"; no `git` invocation |
+| Constraint   | Boundary / Case             | Test Value                                                      | Test Case | Expected                                                       |
+| ------------ | --------------------------- | --------------------------------------------------------------- | --------- | -------------------------------------------------------------- |
+| FR-004-CON-1 | git is the sole side effect | injected fake `GitRunner`                                       | TC-011    | resolves with no real git; argv[0]=`clone`                     |
+| FR-004-CON-2 | blobless + sparse           | `git-subdir` at `v0.2.0`                                        | TC-008    | only the subdir present; tag sha resolved                      |
+| FR-004-CON-3 | option-like git argv field  | `repo`/`url`/`ref`/`sha` = `-x` (e.g. `ref: "--upload-pack=…"`) | TC-022    | `SourceError` "must not begin with `-`"; no `git` invocation   |
+| FR-004-CON-3 | trim-bypass (leading ws)    | `repo`/`url` = `" --upload-pack=… ext://x"`                     | TC-023    | `SourceError` "must not begin with `-`"; trimmed value guarded |
+| FR-004-CON-3 | option-like subdir path     | `git-subdir.path` = `"--stdin"` / `"-X"`                        | TC-024    | `SourceError` "must not begin with `-`"; no `git` invocation   |
 
 ---
 
 ## Error-Path Coverage
 
-| Error                        | Trigger                                                           | Test Case | Status |
-| ---------------------------- | ----------------------------------------------------------------- | --------- | ------ |
-| `SourceError`                | null / no-`type` / missing field / unknown type                   | TC-002    | ✅     |
-| `SourceError`                | `path` source dir does not exist                                  | TC-006    | ✅     |
-| `SourceError`                | option-like (`-`) `repo`/`url`/`ref`/`sha` (argv injection guard) | TC-022    | ✅     |
-| `UnsupportedSourceError`     | `url` / `npm` passed to `resolveSource`                           | TC-007    | ✅     |
-| `ManifestError`              | non-object / bad schemaVersion / non-array entries                | TC-005    | ✅     |
-| `ManifestError`              | null entry / entry missing a non-empty `name`                     | TC-005    | ✅     |
-| `SourceError` (via manifest) | entry with an invalid `source.type`                               | TC-005    | ✅     |
+| Error                        | Trigger                                                            | Test Case | Status |
+| ---------------------------- | ------------------------------------------------------------------ | --------- | ------ |
+| `SourceError`                | null / no-`type` / missing field / unknown type                    | TC-002    | ✅     |
+| `SourceError`                | `path` source dir does not exist                                   | TC-006    | ✅     |
+| `SourceError`                | option-like (`-`) `repo`/`url`/`ref`/`sha` (argv injection guard)  | TC-022    | ✅     |
+| `SourceError`                | leading-whitespace trim-bypass `repo`/`url` (argv injection guard) | TC-023    | ✅     |
+| `SourceError`                | option-like (`-`) `git-subdir.path` (argv injection guard)         | TC-024    | ✅     |
+| `UnsupportedSourceError`     | `url` / `npm` passed to `resolveSource`                            | TC-007    | ✅     |
+| `ManifestError`              | non-object / bad schemaVersion / non-array entries                 | TC-005    | ✅     |
+| `ManifestError`              | null entry / entry missing a non-empty `name`                      | TC-005    | ✅     |
+| `SourceError` (via manifest) | entry with an invalid `source.type`                                | TC-005    | ✅     |
 
 ---
 
@@ -193,13 +201,14 @@ partial clones work offline.
 
 ## Coverage Summary
 
-- **Acceptance Criteria → Test Case coverage: 37 of 37 functional ACs (100%) map to
+- **Acceptance Criteria → Test Case coverage: 39 of 39 functional ACs (100%) map to
   an executed Test Case.** All ACs of FR-001…FR-007 (incl. FR-002-AC-5 whitespace
-  trimming via the padded-input assertion in TC-003, and FR-004-AC-8 the argv
-  injection guard via TC-022), all three FR-004 constraints, and all 10 user-story
-  ACs map to a real test in `tests/index.test.ts`. NFR-001…NFR-004 are covered by
-  the coverage gate, the zero-git assertion, inspection, and analysis.
-- The 22 TCs are **1:1** with the tests in `tests/index.test.ts`. All pass under
+  trimming via the padded-input assertion in TC-003, and the FR-004 argv injection
+  guard: AC-8 via TC-022, the trim-bypass AC-9 via TC-023, and the
+  `git-subdir.path` AC-10 via TC-024), all three FR-004 constraints, and all 10
+  user-story ACs map to a real test in `tests/index.test.ts`. NFR-001…NFR-004 are
+  covered by the coverage gate, the zero-git assertion, inspection, and analysis.
+- The 24 TCs are **1:1** with the tests in `tests/index.test.ts`. All pass under
   `make test` at the 100% coverage gate.
 - All six test-matrix rules are satisfied: every AC has a TC (Rule 1); the
   copy/symlink materialize options are both exercised (Rule 2, TC-014/TC-017); the

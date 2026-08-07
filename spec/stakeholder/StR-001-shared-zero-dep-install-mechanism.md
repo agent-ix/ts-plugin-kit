@@ -41,12 +41,12 @@ library.
 
 ## Validation Criteria
 
-This need is considered satisfied when:
 
-- A host can install a git/path source and reconcile a manifest without adding any
-  transitive runtime dependency through this library.
-- The library compiles and runs without referencing oclif, Filament, or YAML.
-- The host, not the library, decides how a resolved directory becomes a "name".
+| ID | Criteria | Validation |
+|----|----------|------------|
+| StR-001-VC-1 | A host can install a git/path source and reconcile a manifest without adding any transitive runtime dependency through this library. | Inspection |
+| StR-001-VC-2 | The library compiles and runs without referencing oclif, Filament, or YAML. | Demonstration |
+| StR-001-VC-3 | The host, not the library, decides how a resolved directory becomes a "name". | Demonstration |
 
 ## Dependencies
 

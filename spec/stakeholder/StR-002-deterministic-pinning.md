@@ -34,11 +34,12 @@ recorded sha.
 
 ## Validation Criteria
 
-This need is considered satisfied when:
 
-- Resolving a source pinned to a tag returns the concrete commit sha for that tag.
-- Re-resolving the same sha yields the same content.
-- A host can tell, from the registry alone, the exact commit each plugin is at.
+| ID | Criteria | Validation |
+|----|----------|------------|
+| StR-002-VC-1 | Resolving a source pinned to a tag returns the concrete commit sha for that tag. | Demonstration |
+| StR-002-VC-2 | Re-resolving the same sha yields the same content. | Demonstration |
+| StR-002-VC-3 | A host can tell, from the registry alone, the exact commit each plugin is at. | Demonstration |
 
 ## Dependencies
 

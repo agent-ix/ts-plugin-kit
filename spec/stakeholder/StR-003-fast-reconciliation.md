@@ -30,13 +30,12 @@ that the second reconcile of a settled manifest issues **zero** git calls.
 
 ## Validation Criteria
 
-This need is considered satisfied when:
 
-- The second lazy reconcile of an unchanged manifest performs zero git operations
-  and reports every enabled entry as unchanged.
-- A disabled (`defaultEnabled:false`) entry is skipped without resolution.
-- A re-pinned or vanished entry is re-installed without forcing a full re-resolve
-  of the rest.
+| ID | Criteria | Validation |
+|----|----------|------------|
+| StR-003-VC-1 | The second lazy reconcile of an unchanged manifest performs zero git operations and reports every enabled entry as unchanged. | Analysis |
+| StR-003-VC-2 | A disabled (`defaultEnabled:false`) entry is skipped without resolution. | Demonstration |
+| StR-003-VC-3 | A re-pinned or vanished entry is re-installed without forcing a full re-resolve of the rest. | Demonstration |
 
 ## Dependencies
 

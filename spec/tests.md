@@ -65,7 +65,7 @@ partial clones work offline.
 
 ## Stakeholder Requirement Coverage
 
-| Stakeholder Req                 | Trace to US / FR               | Test Cases                     | Coverage Status |
+| Stakeholder Req | Trace to US/FR | Test/Validation | Coverage Status |
 | ------------------------------- | ------------------------------ | ------------------------------ | --------------- |
 | StR-001 (shared, dep-free)      | US-002, FR-001, FR-003, FR-006 | TC-001, TC-004, TC-014, TC-015 | ✅ Unit         |
 | StR-002 (deterministic pinning) | FR-004, FR-005                 | TC-008, TC-010, TC-011, TC-013 | ✅ Unit         |
@@ -89,7 +89,7 @@ partial clones work offline.
 
 ## Functional Requirement Coverage
 
-| Functional Req | Acceptance Criteria                                                    | Test Case · Case String                                                                                                                                   | Coverage Status    |
+| Functional Req | Acceptance Criteria | Test Cases | Coverage Status |
 | -------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
 | FR-001         | AC-1: all six valid source shapes accepted                             | TC-001 — `normalizeSource › "accepts every valid shape"`                                                                                                  | ✅ Unit            |
 | FR-001         | AC-2: null / no-`type` → SourceError                                   | TC-002 — `normalizeSource › "rejects malformed input"`                                                                                                    | ✅ Unit            |
@@ -182,7 +182,7 @@ partial clones work offline.
 
 ## Non-Functional Requirement Coverage
 
-| Non-Functional Req | Verification Method                                                                                 | Evidence / Test Cases                                                                                             | Status        |
+| Non-Functional Req | Verification Method | Evidence/Test Cases | Status |
 | ------------------ | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------- |
 | NFR-001            | Inspection + static grep: no `dependencies`, no non-`node:` import                                  | `package.json` (no `dependencies` key); grep of `src/**` imports                                                  | ✅ Inspection |
 | NFR-002            | Test: 100% coverage gate fails the build below threshold                                            | `vite.config.ts` `test.coverage.thresholds = 100/100/100/100`; `make test`                                        | ✅ Test       |
@@ -203,69 +203,69 @@ partial clones work offline.
 | TC-005  | validateMarketplaceManifest rejects malformed manifests/entries  | Unit            | P0       | FR-003-AC-3, -AC-4, -AC-5, -AC-6                | ✅     |
 | TC-006  | resolveSource path source: returns dir / missing throws          | Unit            | P0       | FR-004-AC-1, -AC-2                              | ✅     |
 | TC-007  | resolveSource url sources unsupported                            | Unit            | P1       | FR-004-AC-3                                     | ✅     |
-| TC-008  | resolveSource git-subdir sparse-checkout at a tag                | Unit (git)      | P0       | FR-004-AC-4, -CON-2                             | ✅     |
-| TC-009  | resolveSource whole-repo HEAD + re-fetch existing cache          | Unit (git)      | P0       | FR-004-AC-5                                     | ✅     |
-| TC-010  | resolveSource sha pin checks out exact commit                    | Unit (git)      | P0       | FR-004-AC-6                                     | ✅     |
-| TC-011  | resolveSource github + injected runner (no real git)             | Unit (fake)     | P0       | FR-004-AC-7, -CON-1, NFR-003                    | ✅     |
+| TC-008  | resolveSource git-subdir sparse-checkout at a tag (git) | Unit | P0       | FR-004-AC-4, -CON-2                             | ✅     |
+| TC-009  | resolveSource whole-repo HEAD + re-fetch existing cache (git) | Unit | P0       | FR-004-AC-5                                     | ✅     |
+| TC-010  | resolveSource sha pin checks out exact commit (git) | Unit | P0       | FR-004-AC-6                                     | ✅     |
+| TC-011  | resolveSource github + injected runner (no real git) (fake) | Unit | P0       | FR-004-AC-7, -CON-1, NFR-003                    | ✅     |
 | TC-012  | registry missing / malformed reads empty                         | Unit            | P0       | FR-005-AC-1                                     | ✅     |
 | TC-013  | registry atomic write round-trip + upsert by name                | Unit            | P0       | FR-005-AC-2, -AC-3                              | ✅     |
-| TC-014  | installEntry named git-subdir materializes + records             | Unit (git)      | P0       | FR-006-AC-1, US-002-AC-2                        | ✅     |
-| TC-015  | installEntry derives name via readName                           | Unit (git)      | P0       | FR-006-AC-2, US-002-AC-1                        | ✅     |
-| TC-016  | installEntry honors entry.path on whole-repo source              | Unit (git)      | P1       | FR-006-AC-3                                     | ✅     |
-| TC-017  | installEntry symlink mode + re-install replaces                  | Unit (git)      | P1       | FR-006-AC-4, US-002-AC-3                        | ✅     |
-| TC-018  | reconcile lazy install/skip + zero-git 2nd run                   | Unit (git)      | P0       | FR-007-AC-1, -AC-2, US-001-AC-1, -AC-2, NFR-003 | ✅     |
-| TC-019  | reconcile sync unchanged-stable / updated-moved                  | Unit (git)      | P0       | FR-007-AC-3, US-001-AC-3                        | ✅     |
-| TC-020  | reconcile lazy re-materializes vanished target                   | Unit (git)      | P1       | FR-007-AC-4                                     | ✅     |
-| TC-021  | reconcile lazy sha pin unchanged/updated                         | Unit (git)      | P0       | FR-007-AC-5                                     | ✅     |
-| TC-022  | resolveSource npm resolve+extract+pin (fake & default fetcher)   | Unit (fake/npm) | P0       | FR-004-AC-8                                     | ✅     |
-| TC-023  | resolveSource exact-cache vs unpinned-refetch (fake fetcher)     | Unit (fake)     | P0       | FR-004-AC-9                                     | ✅     |
-| TC-024  | defaultNpmFetcher local-pack offline (npm pack + tar)            | Unit (npm)      | P1       | FR-004-AC-10                                    | ✅     |
+| TC-014  | installEntry named git-subdir materializes + records (git) | Unit | P0       | FR-006-AC-1, US-002-AC-2                        | ✅     |
+| TC-015  | installEntry derives name via readName (git) | Unit | P0       | FR-006-AC-2, US-002-AC-1                        | ✅     |
+| TC-016  | installEntry honors entry.path on whole-repo source (git) | Unit | P1       | FR-006-AC-3                                     | ✅     |
+| TC-017  | installEntry symlink mode + re-install replaces (git) | Unit | P1       | FR-006-AC-4, US-002-AC-3                        | ✅     |
+| TC-018  | reconcile lazy install/skip + zero-git 2nd run (git) | Unit | P0       | FR-007-AC-1, -AC-2, US-001-AC-1, -AC-2, NFR-003 | ✅     |
+| TC-019  | reconcile sync unchanged-stable / updated-moved (git) | Unit | P0       | FR-007-AC-3, US-001-AC-3                        | ✅     |
+| TC-020  | reconcile lazy re-materializes vanished target (git) | Unit | P1       | FR-007-AC-4                                     | ✅     |
+| TC-021  | reconcile lazy sha pin unchanged/updated (git) | Unit | P0       | FR-007-AC-5                                     | ✅     |
+| TC-022  | resolveSource npm resolve+extract+pin (fake & default fetcher) (fake/npm) | Unit | P0       | FR-004-AC-8                                     | ✅     |
+| TC-023  | resolveSource exact-cache vs unpinned-refetch (fake fetcher) (fake) | Unit | P0       | FR-004-AC-9                                     | ✅     |
+| TC-024  | defaultNpmFetcher local-pack offline (npm pack + tar) (npm) | Unit | P1       | FR-004-AC-10                                    | ✅     |
 | TC-025  | npmPackArgs pinned/unpinned + registry argv                      | Unit            | P1       | FR-004-AC-11                                    | ✅     |
 | TC-026  | normalizeSource rejects option-like npm package (`-x`)           | Unit            | P0       | FR-004-CON-3                                    | ✅     |
 | TC-027  | parseNpmPackJson robust parse + descriptive parse-failure errors | Unit            | P0       | FR-004-AC-12, -CON-4                            | ✅     |
-| TC-028  | unpinned npm re-fetch clears stale tarballs (cache hygiene)      | Unit (fake)     | P1       | FR-004-AC-13                                    | ✅     |
+| TC-028  | unpinned npm re-fetch clears stale tarballs (cache hygiene) (fake) | Unit | P1       | FR-004-AC-13                                    | ✅     |
 | TC-029  | normalizeSource rejects option-like git argv fields (`-x`)       | Unit            | P0       | FR-004-AC-14, -CON-5                            | ✅     |
 | TC-030  | normalizeSource rejects leading-ws trim-bypass repo/url          | Unit            | P0       | FR-004-AC-15, -CON-5                            | ✅     |
 | TC-031  | normalizeSource rejects option-like `git-subdir.path`            | Unit            | P0       | FR-004-AC-16, -CON-5                            | ✅     |
-| TC-032  | searchPlugins merges npm + github into one ranked list           | Unit (fake)     | P0       | FR-008-AC-1, -CON-1, US-003-EX-1                | 🚧     |
-| TC-033  | searchPlugins composes encoded queries + limit plumbing          | Unit (fake)     | P0       | FR-008-AC-2                                     | 🚧     |
-| TC-034  | searchPlugins one backend fails, other returns + error           | Unit (fake)     | P0       | FR-008-AC-3, US-003-EX-3                        | 🚧     |
-| TC-035  | searchPlugins Authorization header + sources filter              | Unit (fake)     | P1       | FR-008-AC-4                                     | 🚧     |
-| TC-036  | searchPlugins dedupes npm vs github (npm preferred)              | Unit (fake)     | P1       | FR-008-AC-5                                     | 🚧     |
-| TC-037  | verify keeps candidate returning capabilities                    | Unit (fake)     | P0       | FR-009-AC-1, US-003-EX-2                        | 🚧     |
-| TC-038  | verify drops candidate returning null                            | Unit (fake)     | P0       | FR-009-AC-2, US-003-EX-2                        | 🚧     |
-| TC-039  | verify drops candidate when manifest fetch fails                 | Unit (fake)     | P0       | FR-009-AC-3                                     | 🚧     |
-| TC-040  | verify fetches manifests from unpkg / raw.githubusercontent      | Unit (fake)     | P1       | FR-009-AC-4                                     | 🚧     |
-| TC-041  | no verifier → unfiltered, no manifest fetch                      | Unit (fake)     | P1       | FR-009-AC-5                                     | 🚧     |
-| TC-042  | createTtlCache returns before expiry, evicts after clock         | Unit (fake)     | P0       | FR-010-AC-1                                     | 🚧     |
-| TC-043  | createTtlCache evicts oldest past max                            | Unit (fake)     | P1       | FR-010-AC-2                                     | 🚧     |
-| TC-044  | createPluginSearch cache hit issues no fetch                     | Unit (fake)     | P0       | FR-010-AC-3                                     | 🚧     |
-| TC-045  | createPluginSearch invalidate forces re-fetch                    | Unit (fake)     | P1       | FR-010-AC-4                                     | 🚧     |
-| TC-046  | createPluginSearch resolves late-bound token per call            | Unit (fake)     | P1       | FR-010-AC-5                                     | 🚧     |
-| TC-047  | searchPlugins reads github rate-limit headers                    | Unit (fake)     | P0       | FR-011-AC-1                                     | 🚧     |
-| TC-048  | searchPlugins surfaces exhausted window as rateLimited error     | Unit (fake)     | P0       | FR-011-AC-2                                     | 🚧     |
-| TC-049  | createPluginSearch short-circuits github while exhausted         | Unit (fake)     | P0       | FR-011-AC-3                                     | 🚧     |
-| TC-050  | createPluginSearch resumes github past resetAt                   | Unit (fake)     | P1       | FR-011-AC-4                                     | 🚧     |
+| TC-032  | searchPlugins merges npm + github into one ranked list (fake) | Unit | P0       | FR-008-AC-1, -CON-1, US-003-EX-1                | 🚧     |
+| TC-033  | searchPlugins composes encoded queries + limit plumbing (fake) | Unit | P0       | FR-008-AC-2                                     | 🚧     |
+| TC-034  | searchPlugins one backend fails, other returns + error (fake) | Unit | P0       | FR-008-AC-3, US-003-EX-3                        | 🚧     |
+| TC-035  | searchPlugins Authorization header + sources filter (fake) | Unit | P1       | FR-008-AC-4                                     | 🚧     |
+| TC-036  | searchPlugins dedupes npm vs github (npm preferred) (fake) | Unit | P1       | FR-008-AC-5                                     | 🚧     |
+| TC-037  | verify keeps candidate returning capabilities (fake) | Unit | P0       | FR-009-AC-1, US-003-EX-2                        | 🚧     |
+| TC-038  | verify drops candidate returning null (fake) | Unit | P0       | FR-009-AC-2, US-003-EX-2                        | 🚧     |
+| TC-039  | verify drops candidate when manifest fetch fails (fake) | Unit | P0       | FR-009-AC-3                                     | 🚧     |
+| TC-040  | verify fetches manifests from unpkg / raw.githubusercontent (fake) | Unit | P1       | FR-009-AC-4                                     | 🚧     |
+| TC-041  | no verifier → unfiltered, no manifest fetch (fake) | Unit | P1       | FR-009-AC-5                                     | 🚧     |
+| TC-042  | createTtlCache returns before expiry, evicts after clock (fake) | Unit | P0       | FR-010-AC-1                                     | 🚧     |
+| TC-043  | createTtlCache evicts oldest past max (fake) | Unit | P1       | FR-010-AC-2                                     | 🚧     |
+| TC-044  | createPluginSearch cache hit issues no fetch (fake) | Unit | P0       | FR-010-AC-3                                     | 🚧     |
+| TC-045  | createPluginSearch invalidate forces re-fetch (fake) | Unit | P1       | FR-010-AC-4                                     | 🚧     |
+| TC-046  | createPluginSearch resolves late-bound token per call (fake) | Unit | P1       | FR-010-AC-5                                     | 🚧     |
+| TC-047  | searchPlugins reads github rate-limit headers (fake) | Unit | P0       | FR-011-AC-1                                     | 🚧     |
+| TC-048  | searchPlugins surfaces exhausted window as rateLimited error (fake) | Unit | P0       | FR-011-AC-2                                     | 🚧     |
+| TC-049  | createPluginSearch short-circuits github while exhausted (fake) | Unit | P0       | FR-011-AC-3                                     | 🚧     |
+| TC-050  | createPluginSearch resumes github past resetAt (fake) | Unit | P1       | FR-011-AC-4                                     | 🚧     |
 | TC-051  | sourceToInstallInput renders npm + github sources                | Unit            | P1       | FR-012-AC-1                                     | 🚧     |
 | TC-052  | sourceToInstallInput renders git/url + path sources              | Unit            | P1       | FR-012-AC-2                                     | 🚧     |
-| TC-053  | searchPlugins all backends fail → empty + per-backend errors     | Unit (fake)     | P0       | FR-008-AC-6                                     | 🚧     |
-| TC-054  | searchPlugins tolerates malformed payloads / missing optionals   | Unit (fake)     | P0       | FR-008-AC-7                                     | 🚧     |
-| TC-055  | searchPlugins clamps limit to backend maxima                     | Unit (fake)     | P1       | FR-008-AC-8                                     | 🚧     |
-| TC-056  | searchPlugins deterministic total-order ranking                  | Unit (fake)     | P1       | FR-008-AC-9                                     | 🚧     |
-| TC-057  | searchPlugins propagates signal; abort → backend error           | Unit (fake)     | P1       | FR-008-AC-10                                    | 🚧     |
-| TC-058  | verify drops on transient fetch fail + transient error           | Unit (fake)     | P0       | FR-009-AC-6                                     | 🚧     |
-| TC-059  | verify throw isolated to its candidate                           | Unit (fake)     | P0       | FR-009-AC-7                                     | 🚧     |
-| TC-060  | verify caps manifest-fetch concurrency at six                    | Unit (fake)     | P1       | FR-009-AC-8                                     | 🚧     |
-| TC-061  | createPluginSearch does not cache an errored response            | Unit (fake)     | P0       | FR-010-AC-6                                     | 🚧     |
-| TC-062  | createPluginSearch keys verifier-presence + token-id             | Unit (fake)     | P1       | FR-010-AC-7                                     | 🚧     |
-| TC-063  | createPluginSearch first call issues github (no short-circuit)   | Unit (fake)     | P1       | FR-011-AC-5                                     | 🚧     |
-| TC-064  | searchPlugins never leaks github token                           | Unit (fake)     | P0       | FR-008-CON-2                                    | 🚧     |
-| TC-065  | createPluginSearch keys distinct tokens to distinct entries      | Unit (fake)     | P0       | FR-010-AC-8, FR-008-CON-2                       | ✅     |
-| TC-066  | createPluginSearch bounds cache by default max (256)             | Unit (fake)     | P1       | FR-010-AC-9                                     | ✅     |
-| TC-067  | verify drops traversal/control-char name before fetch            | Unit (fake)     | P0       | FR-009-AC-9, -CON-1                             | ✅     |
-| TC-068  | searchPlugins treats non-finite rate header as no rate info      | Unit (fake)     | P1       | FR-011-AC-6                                     | ✅     |
-| TC-069  | createPluginSearch cache hit returns a distinct clone            | Unit (fake)     | P1       | FR-010-AC-10                                    | ✅     |
-| TC-070  | createPluginSearch honors an explicit cacheMax override          | Unit (fake)     | P1       | FR-010-AC-9                                     | ✅     |
+| TC-053  | searchPlugins all backends fail → empty + per-backend errors (fake) | Unit | P0       | FR-008-AC-6                                     | 🚧     |
+| TC-054  | searchPlugins tolerates malformed payloads / missing optionals (fake) | Unit | P0       | FR-008-AC-7                                     | 🚧     |
+| TC-055  | searchPlugins clamps limit to backend maxima (fake) | Unit | P1       | FR-008-AC-8                                     | 🚧     |
+| TC-056  | searchPlugins deterministic total-order ranking (fake) | Unit | P1       | FR-008-AC-9                                     | 🚧     |
+| TC-057  | searchPlugins propagates signal; abort → backend error (fake) | Unit | P1       | FR-008-AC-10                                    | 🚧     |
+| TC-058  | verify drops on transient fetch fail + transient error (fake) | Unit | P0       | FR-009-AC-6                                     | 🚧     |
+| TC-059  | verify throw isolated to its candidate (fake) | Unit | P0       | FR-009-AC-7                                     | 🚧     |
+| TC-060  | verify caps manifest-fetch concurrency at six (fake) | Unit | P1       | FR-009-AC-8                                     | 🚧     |
+| TC-061  | createPluginSearch does not cache an errored response (fake) | Unit | P0       | FR-010-AC-6                                     | 🚧     |
+| TC-062  | createPluginSearch keys verifier-presence + token-id (fake) | Unit | P1       | FR-010-AC-7                                     | 🚧     |
+| TC-063  | createPluginSearch first call issues github (no short-circuit) (fake) | Unit | P1       | FR-011-AC-5                                     | 🚧     |
+| TC-064  | searchPlugins never leaks github token (fake) | Unit | P0       | FR-008-CON-2                                    | 🚧     |
+| TC-065  | createPluginSearch keys distinct tokens to distinct entries (fake) | Unit | P0       | FR-010-AC-8, FR-008-CON-2                       | ✅     |
+| TC-066  | createPluginSearch bounds cache by default max (256) (fake) | Unit | P1       | FR-010-AC-9                                     | ✅     |
+| TC-067  | verify drops traversal/control-char name before fetch (fake) | Unit | P0       | FR-009-AC-9, -CON-1                             | ✅     |
+| TC-068  | searchPlugins treats non-finite rate header as no rate info (fake) | Unit | P1       | FR-011-AC-6                                     | ✅     |
+| TC-069  | createPluginSearch cache hit returns a distinct clone (fake) | Unit | P1       | FR-010-AC-10                                    | ✅     |
+| TC-070  | createPluginSearch honors an explicit cacheMax override (fake) | Unit | P1       | FR-010-AC-9                                     | ✅     |
 
 > TC-022…TC-028 are npm source-resolution tests and TC-029…TC-031 are
 > the git argv-injection guard tests; both blocks are 1:1 with tests in

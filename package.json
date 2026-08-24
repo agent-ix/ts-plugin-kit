@@ -38,7 +38,7 @@
     "pkg:refresh-local": "pnpm dlx @agent-ix/js-deps refresh-local"
   },
   "devDependencies": {
-    "@types/node": "^25.9.2",
+    "@types/node": "^26.2.0",
     "@typescript-eslint/eslint-plugin": "^8.60.1",
     "@typescript-eslint/parser": "^8.60.1",
     "@vitest/coverage-v8": "^4.1.8",

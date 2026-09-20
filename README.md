@@ -1,5 +1,7 @@
 # ts-plugin-kit
 
+[![Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white)](https://discord.gg/6qsdhSPE)
+
 Framework-agnostic plugin/marketplace toolkit: typed git/npm sources, ref/sha pinning, install registry, and default-set reconciliation. **Zero runtime dependencies.**
 
 It is the install mechanism shared by Agent-IX CLIs and any other host (the `ix` CLI, `quoin`, a future desktop app). It knows nothing about oclif or any particular plugin payload — a host supplies a `readName` callback and decides what to do with the resolved files.
